@@ -876,18 +876,9 @@ export default function CRMHome() {
                                   {inq.customers?.company_name}
                                 </td>
                                 <td>
-                                  {inq.inquiry_items && inq.inquiry_items.length > 0 ? (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <span style={{ fontWeight: '600' }}>{inq.inquiry_items[0].item_name}</span>
-                                      {inq.inquiry_items.length > 1 && (
-                                        <span style={{ fontSize: '11px', background: 'var(--color-accent-glow)', color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '2px 8px', borderRadius: '20px', fontWeight: '600', whiteSpace: 'nowrap' }}>
-                                          +{inq.inquiry_items.length - 1} more
-                                        </span>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No items</span>
-                                  )}
+                                  <span className="item-count-badge">
+                                    📦 {inq.inquiry_items?.length || 0} {inq.inquiry_items?.length === 1 ? 'Item' : 'Items'}
+                                  </span>
                                 </td>
                                 <td style={{ color: inq.quotation_number ? 'var(--text-main)' : 'var(--color-pending)' }}>
                                   {inq.quotation_number || 'Missing'}
@@ -1039,7 +1030,7 @@ export default function CRMHome() {
                           <tr>
                             <th>Inquiry Date</th>
                             <th>Customer</th>
-                            <th>Items & Details</th>
+                            <th>Items</th>
                             <th>Type</th>
                             <th>Quot. #</th>
                             <th>Lead Time</th>
@@ -1059,18 +1050,9 @@ export default function CRMHome() {
                                   {inq.customers?.company_name}
                                 </td>
                                 <td>
-                                  {inq.inquiry_items && inq.inquiry_items.length > 0 ? (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <span style={{ fontWeight: '600' }}>{inq.inquiry_items[0].item_name}</span>
-                                      {inq.inquiry_items.length > 1 && (
-                                        <span style={{ fontSize: '11px', background: 'var(--color-accent-glow)', color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '2px 8px', borderRadius: '20px', fontWeight: '600', whiteSpace: 'nowrap' }}>
-                                          +{inq.inquiry_items.length - 1} more
-                                        </span>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No items</span>
-                                  )}
+                                  <span className="item-count-badge">
+                                    📦 {inq.inquiry_items?.length || 0} {inq.inquiry_items?.length === 1 ? 'Item' : 'Items'}
+                                  </span>
                                 </td>
                                 <td>
                                   <span style={{ fontSize: '11px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
@@ -1087,13 +1069,16 @@ export default function CRMHome() {
                                   {isStaleItem ? (
                                     <span className="status-badge badge-stale">Stale Follow-up</span>
                                   ) : (
-                                    <>
-                                      {inq.status === 'PO Won' && <span className="status-badge badge-won">PO Won</span>}
-                                      {inq.status === 'Pending Quotation' && <span className="status-badge badge-pending">Pending Quotation</span>}
-                                      {inq.status === 'Submitted' && <span className="status-badge badge-pending" style={{ color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'var(--color-accent-glow)' }}>Submitted</span>}
-                                      {inq.status === 'Follow Up' && <span className="status-badge badge-follow">Follow Up</span>}
-                                      {inq.status === 'Canceled' && <span className="status-badge badge-canceled">Canceled</span>}
-                                    </>
+                                    (() => {
+                                      const aggStatus = getAggregateStatus(inq);
+                                      if (aggStatus === 'PO Won') return <span className="status-badge badge-won">PO Won</span>;
+                                      if (aggStatus.startsWith('PO Won (')) return <span className="status-badge badge-partial-won">{aggStatus}</span>;
+                                      if (aggStatus === 'Pending Quotation') return <span className="status-badge badge-pending">Pending Quotation</span>;
+                                      if (aggStatus === 'Submitted') return <span className="status-badge badge-pending" style={{ color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'var(--color-accent-glow)' }}>Submitted</span>;
+                                      if (aggStatus === 'Follow Up') return <span className="status-badge badge-follow">Follow Up</span>;
+                                      if (aggStatus === 'Canceled') return <span className="status-badge badge-canceled">Canceled</span>;
+                                      return null;
+                                    })()
                                   )}
                                 </td>
                               </tr>
