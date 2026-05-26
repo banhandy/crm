@@ -22,10 +22,20 @@ import {
   Mail,
   MapPin,
   Calendar,
-  UserCheck
+  UserCheck,
+  Lock,
+  LogOut
 } from 'lucide-react';
 
 export default function CRMHome() {
+  // Authentication States
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authActionLoading, setAuthActionLoading] = useState(false);
+
   // Navigation & Theme States
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'inquiries', 'customers'
   const [theme, setTheme] = useState('dark');
@@ -101,8 +111,25 @@ export default function CRMHome() {
     }
   };
 
-  // Real-time Subscriptions setup
+  // Auth Listener
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Real-time Subscriptions setup when authenticated
+  useEffect(() => {
+    if (!session) return;
+    
     fetchData();
 
     // Subscribe to inquiries updates
@@ -133,7 +160,7 @@ export default function CRMHome() {
       supabase.removeChannel(inquiriesChannel);
       supabase.removeChannel(customersChannel);
     };
-  }, []);
+  }, [session]);
 
   // Theme Sync effect
   useEffect(() => {
@@ -151,6 +178,33 @@ export default function CRMHome() {
     const diffTime = Math.abs(new Date() - new Date(lastActivityDateStr));
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 3;
+  };
+
+  // Auth Sign In Handler
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    setAuthActionLoading(true);
+    setAuthError('');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      if (error) {
+        // OWASP top 10 safe enumeration error messages
+        setAuthError('Invalid login credentials. Please try again.');
+      }
+    } catch (err) {
+      setAuthError('An unexpected server error occurred.');
+    } finally {
+      setAuthActionLoading(false);
+    }
+  };
+
+  // Auth Sign Out Handler
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
   };
 
   // Analytics helper calculations
@@ -172,7 +226,7 @@ export default function CRMHome() {
     return acc;
   }, {});
 
-  // Conversion rate: Won / (Won + Canceled + Follow up + Quoted...)
+  // Conversion rate: Won / Total
   const conversionRate = totalInquiries > 0 
     ? Math.round((wonOrdersCount / totalInquiries) * 100) 
     : 0;
@@ -291,6 +345,106 @@ export default function CRMHome() {
     setIsDrawerOpen(true);
   };
 
+  // LOADING PORTAL (Session validation in progress)
+  if (authLoading) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', color: 'var(--text-main)', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ width: '40px', height: '40px', border: '4px solid var(--border-color)', borderTopColor: 'var(--color-accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <p style={{ color: 'var(--text-muted)', fontFamily: 'sans-serif', fontSize: '14px' }}>Securing workstation connection...</p>
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        `}} />
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------
+  // RENDER SECURITY LOGIN SCREEN (If not authenticated)
+  // ----------------------------------------------------
+  if (!session) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        width: '100vw', 
+        height: '100vh', 
+        background: 'var(--bg-app)',
+        transition: 'background 0.3s'
+      }}>
+        <div className="glass-panel" style={{ 
+          width: '420px', 
+          padding: '40px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '24px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, var(--color-accent), var(--color-pending))', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '24px', fontWeight: 'bold', margin: '0 auto 16px auto' }}>C</div>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '-0.5px' }}>CRM Core Portal</h2>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '6px' }}>Admin-Managed Access Portal</p>
+          </div>
+
+          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="form-group">
+              <label className="form-label">Workplace Email</label>
+              <input 
+                type="email" 
+                className="form-input" 
+                required 
+                placeholder="e.g. administrator@company.com" 
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input 
+                type="password" 
+                className="form-input" 
+                required 
+                placeholder="••••••••" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+            </div>
+
+            {authError && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: 'var(--color-stale-glow)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', color: 'var(--color-stale)', fontSize: '13px' }}>
+                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className="action-btn" 
+              style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '12px', fontSize: '15px' }}
+              disabled={authActionLoading}
+            >
+              {authActionLoading ? 'Authenticating...' : 'Sign In To Workspace'}
+            </button>
+          </form>
+
+          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            <button 
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+              onClick={toggleTheme}
+            >
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+              Toggle Theme
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------
+  // RENDER WORKSPACE (If authenticated)
+  // ----------------------------------------------------
   return (
     <div className="app-container">
       {/* 1. SIDEBAR NAVIGATION */}
@@ -331,11 +485,17 @@ export default function CRMHome() {
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           </button>
+          <button className="theme-toggle-btn" onClick={handleSignOut} style={{ color: 'var(--color-stale)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+            <LogOut size={18} />
+            Sign Out
+          </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '0 8px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyCentent: 'center', fontWeight: 'bold', color: '#fff', textAlign: 'center', lineHeight: '36px', justifyContent: 'center' }}>H</div>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', textAlign: 'center', lineHeight: '36px' }}>
+              {session.user.email[0].toUpperCase()}
+            </div>
             <div>
-              <p style={{ fontSize: '14px', fontWeight: '600' }}>P. Handy</p>
-              <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Administrator</p>
+              <p style={{ fontSize: '13px', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '130px' }}>{session.user.email}</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Authorized</p>
             </div>
           </div>
         </div>
@@ -782,7 +942,7 @@ export default function CRMHome() {
             </div>
 
             <div className="form-group">
-              <label className="form-label" style={{ color: 'var(--color-pending)', display: 'flex', justifyContent: 'space-between' }}>
+              <label className="form-label" style={{ color: 'var(--color-pending)', display: 'flex', justifyCentent: 'space-between' }}>
                 Quotation Number 
                 {!selectedInquiry.quotation_number && <span style={{ fontSize: '11px', fontWeight: 'normal' }}>⚠️ Missing input</span>}
               </label>
