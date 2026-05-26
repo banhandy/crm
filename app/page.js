@@ -96,15 +96,6 @@ export default function CRMHome() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'inquiries', 'customers'
   const [theme, setTheme] = useState('dark');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  const handleScroll = (e) => {
-    if (e.target.scrollTop > 40) {
-      setScrolled(true);
-    } else {
-      setScrolled(false);
-    }
-  };
 
   // Database States
   const [inquiries, setInquiries] = useState([]);
@@ -784,7 +775,7 @@ export default function CRMHome() {
 
       {/* 2. MAIN WORKSPACE VIEW */}
       <main className="main-content">
-        <header className={`top-bar ${scrolled ? 'scrolled' : ''}`}>
+        <header className="top-bar">
           <h1 className="page-title">
             {activeTab === 'dashboard' && '📊 Dashboard Analytics'}
             {activeTab === 'inquiries' && '📁 Inquiries Pipeline'}
@@ -793,16 +784,16 @@ export default function CRMHome() {
           <div style={{ display: 'flex', gap: '12px' }}>
             {activeTab === 'customers' && (
               <button className="action-btn" onClick={() => setIsAddCustomerOpen(true)}>
-                <Plus size={scrolled ? 14 : 18} /> Add Customer
+                <Plus size={16} /> Add Customer
               </button>
             )}
             <button className="action-btn" onClick={() => setIsAddInquiryOpen(true)}>
-              <Plus size={scrolled ? 14 : 18} /> New Inquiry
+              <Plus size={16} /> New Inquiry
             </button>
           </div>
         </header>
 
-        <div className="content-body" onScroll={handleScroll}>
+        <div className="content-body">
           {/* A. KPI BANNER RIBBON (Visible on all tabs for high overview) */}
           <section className="kpi-row">
             <div className="glass-panel kpi-card">
@@ -863,7 +854,8 @@ export default function CRMHome() {
             <>
               {/* TAB 1: DASHBOARD VIEW */}
               {activeTab === 'dashboard' && (
-                <div className="dashboard-grid">
+                <>
+                  <div className="dashboard-grid">
                   {/* Left Column: Stale follow-up items needing immediate attention */}
                   <div className="glass-panel section-card">
                     <div className="section-header">
@@ -982,59 +974,61 @@ export default function CRMHome() {
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Full-width visual Gantt chart / timeline tracking report for FAI items */}
-                  <div className="glass-panel section-card" style={{ marginTop: '24px', width: '100%' }}>
-                    <div className="section-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
-                      <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <FileCheck size={20} color="var(--color-won)" />
-                        🛠️ Product Engineering FAI Timeline & Quality Tracker
-                      </h2>
-                      <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        Visual Gantt milestones for items undergoing First Article Inspection (FAI)
-                      </p>
-                    </div>
+                {/* Full-width visual Gantt chart / timeline tracking report for FAI items */}
+                  {/* Full-width Section Title Header */}
+                  <div style={{ marginTop: '24px', width: '100%', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px' }}>
+                      <FileCheck size={22} color="var(--color-won)" />
+                      🛠️ Product Engineering FAI Timeline & Quality Tracker
+                    </h2>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                      Visual Gantt milestones for items undergoing First Article Inspection (FAI)
+                    </p>
+                  </div>
 
-                    {(() => {
-                      // Filter items that are PO Won or have active FAI inspections
-                      const faiItems = inquiries.flatMap(inq => 
-                        (inq.inquiry_items || []).map(item => ({
-                          ...item,
-                          customerName: inq.customers?.company_name,
-                          inquiryDate: inq.inquiry_date,
-                          quotationDate: inq.quotation_date,
-                          quotationNumber: inq.quotation_number,
-                          parentStatus: inq.status,
-                          parentId: inq.id,
-                          inqRef: inq
-                        }))
-                      ).filter(item => item.parentStatus === 'PO Won' || item.status === 'PO Won' || (item.fai_status && item.fai_status !== 'Pending'));
+                  {(() => {
+                    // Filter items that are PO Won or have active FAI inspections
+                    const faiItems = inquiries.flatMap(inq => 
+                      (inq.inquiry_items || []).map(item => ({
+                        ...item,
+                        customerName: inq.customers?.company_name,
+                        inquiryDate: inq.inquiry_date,
+                        quotationDate: inq.quotation_date,
+                        quotationNumber: inq.quotation_number,
+                        parentStatus: inq.status,
+                        parentId: inq.id,
+                        inqRef: inq
+                      }))
+                    ).filter(item => item.parentStatus === 'PO Won' || item.status === 'PO Won' || (item.fai_status && item.fai_status !== 'Pending'));
 
-                      if (faiItems.length === 0) {
-                        return (
-                          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-                            <AlertCircle size={36} style={{ marginBottom: '12px', color: 'var(--text-muted)', opacity: 0.6 }} />
-                            <p style={{ fontWeight: '600', color: 'var(--text-main)' }}>No Active FAI Tracking Items</p>
-                            <p style={{ fontSize: '13px', marginTop: '4px' }}>Items marked as "PO Won" or having active FAI inspections will automatically display a Gantt timeline here.</p>
-                          </div>
-                        );
-                      }
-
+                    if (faiItems.length === 0) {
                       return (
-                        <div className="fai-gantt-container">
-                          {faiItems.map((item, idx) => {
-                            // Calculate progress based on passed milestones
-                            let progress = 0;
-                            if (item.fai_dimensions === 'Passed') progress += 33;
-                            if (item.fai_material_cert === 'Passed') progress += 33;
-                            if (item.fai_test_report === 'Passed') progress += 34;
+                        <div className="glass-panel section-card" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', width: '100%' }}>
+                          <AlertCircle size={36} style={{ marginBottom: '12px', color: 'var(--text-muted)', opacity: 0.6 }} />
+                          <p style={{ fontWeight: '600', color: 'var(--text-main)' }}>No Active FAI Tracking Items</p>
+                          <p style={{ fontSize: '13px', marginTop: '4px' }}>Items marked as "PO Won" or having active FAI inspections will automatically display a Gantt timeline here.</p>
+                        </div>
+                      );
+                    }
 
-                            const dimStatus = item.fai_dimensions || 'Pending';
-                            const matStatus = item.fai_material_cert || 'Pending';
-                            const testStatus = item.fai_test_report || 'Pending';
+                    return (
+                      <div className="fai-gantt-container" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {faiItems.map((item, idx) => {
+                          // Calculate progress based on passed milestones
+                          let progress = 0;
+                          if (item.fai_dimensions === 'Passed') progress += 33;
+                          if (item.fai_material_cert === 'Passed') progress += 33;
+                          if (item.fai_test_report === 'Passed') progress += 34;
 
-                            return (
-                              <div key={idx} className="fai-gantt-row" onClick={() => openInquiryDrawer(item.inqRef)}>
+                          const dimStatus = item.fai_dimensions || 'Pending';
+                          const matStatus = item.fai_material_cert || 'Pending';
+                          const testStatus = item.fai_test_report || 'Pending';
+
+                          return (
+                            <div key={idx} className="glass-panel section-card glass-panel-hover" style={{ cursor: 'pointer', padding: '20px', transition: 'all 0.2s ease', border: '1px solid var(--border-color)' }} onClick={() => openInquiryDrawer(item.inqRef)}>
+                              <div className="fai-gantt-row-container" style={{ display: 'grid', gridTemplateColumns: '250px 1fr 200px', alignItems: 'center', gap: '20px' }}>
                                 <div className="fai-gantt-info">
                                   <span className="fai-gantt-customer">{item.customerName}</span>
                                   <span className="fai-gantt-item">{item.item_name}</span>
@@ -1093,13 +1087,13 @@ export default function CRMHome() {
                                   </div>
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </>
               )}
 
               {/* TAB 2: INQUIRIES PIPELINE VIEW */}

@@ -229,7 +229,7 @@ body {
 }
 
 .top-bar {
-  height: 80px;
+  height: 64px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -239,10 +239,13 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 10;
+  position: sticky;
+  top: 0;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
@@ -757,35 +760,156 @@ body {
   font-weight: 600;
 }
 
-/* Sticky Shrinking Header Styles */
+/* Sticky Header Styles (Non-shrinking, Static & Clean) */
 .top-bar {
-  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
   position: sticky;
   top: 0;
-}
-
-.top-bar.scrolled {
   height: 64px;
   padding: 0 32px;
-  background: rgba(13, 16, 23, 0.95) !important;
+  background: var(--bg-sidebar);
   border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 10;
 }
 
-.page-title {
-  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.top-bar.scrolled .page-title {
+.top-bar .page-title {
   font-size: 18px;
 }
 
-.action-btn {
-  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, box-shadow 0.2s ease;
-}
-
-.top-bar.scrolled .action-btn {
+.top-bar .action-btn {
   padding: 6px 14px;
   font-size: 12px;
   border-radius: 8px;
+}
+
+/* FAI Gantt Timeline Styles */
+.fai-gantt-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.fai-gantt-row-container {
+  display: grid;
+  grid-template-columns: 250px 1fr 200px;
+  align-items: center;
+  gap: 20px;
+}
+
+.fai-gantt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fai-gantt-customer {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fai-gantt-item {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.fai-gantt-engineer {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Timeline Track */
+.fai-timeline-track {
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 10px;
+}
+
+.fai-timeline-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.fai-timeline-bar.won {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-won));
+}
+
+.fai-timeline-bar.progress {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-follow));
+}
+
+/* Timeline Milestone Nodes */
+.fai-milestone {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-sidebar);
+  border: 2px solid var(--border-color);
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.fai-milestone.passed {
+  background: var(--color-won);
+  border-color: var(--color-won);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.fai-milestone.pending {
+  background: var(--bg-sidebar);
+  border-color: var(--border-color);
+}
+
+.fai-milestone.failed {
+  background: var(--color-stale);
+  border-color: var(--color-stale);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.fai-milestone-label {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.fai-milestone.passed .fai-milestone-label {
+  color: var(--text-main);
+}
+
+.fai-gantt-dates {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.fai-gantt-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
 }
