@@ -96,6 +96,15 @@ export default function CRMHome() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'inquiries', 'customers'
   const [theme, setTheme] = useState('dark');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  const handleScroll = (e) => {
+    if (e.target.scrollTop > 40) {
+      setScrolled(true);
+    } else {
+      setScrolled(false);
+    }
+  };
 
   // Database States
   const [inquiries, setInquiries] = useState([]);
@@ -560,7 +569,12 @@ export default function CRMHome() {
 
   // Open Drawer and populate values
   const openInquiryDrawer = (inq) => {
-    setSelectedInquiry({ ...inq });
+    const items = (inq.inquiry_items || []).map(item => ({
+      ...item,
+      showFai: item.status === 'PO Won' ? true : !!item.showFai,
+      showDetails: item.status === 'PO Won' ? true : !!item.showDetails
+    }));
+    setSelectedInquiry({ ...inq, inquiry_items: items });
     setIsDrawerOpen(true);
   };
 
@@ -770,7 +784,7 @@ export default function CRMHome() {
 
       {/* 2. MAIN WORKSPACE VIEW */}
       <main className="main-content">
-        <header className="top-bar">
+        <header className={`top-bar ${scrolled ? 'scrolled' : ''}`}>
           <h1 className="page-title">
             {activeTab === 'dashboard' && '📊 Dashboard Analytics'}
             {activeTab === 'inquiries' && '📁 Inquiries Pipeline'}
@@ -779,16 +793,16 @@ export default function CRMHome() {
           <div style={{ display: 'flex', gap: '12px' }}>
             {activeTab === 'customers' && (
               <button className="action-btn" onClick={() => setIsAddCustomerOpen(true)}>
-                <Plus size={18} /> Add Customer
+                <Plus size={scrolled ? 14 : 18} /> Add Customer
               </button>
             )}
             <button className="action-btn" onClick={() => setIsAddInquiryOpen(true)}>
-              <Plus size={18} /> New Inquiry
+              <Plus size={scrolled ? 14 : 18} /> New Inquiry
             </button>
           </div>
         </header>
 
-        <div className="content-body">
+        <div className="content-body" onScroll={handleScroll}>
           {/* A. KPI BANNER RIBBON (Visible on all tabs for high overview) */}
           <section className="kpi-row">
             <div className="glass-panel kpi-card">

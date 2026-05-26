@@ -756,3 +756,36 @@ body {
   box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
   font-weight: 600;
 }
+
+/* Sticky Shrinking Header Styles */
+.top-bar {
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  position: sticky;
+  top: 0;
+}
+
+.top-bar.scrolled {
+  height: 56px;
+  padding: 0 24px;
+  background: rgba(13, 16, 23, 0.95) !important;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.page-title {
+  transition: font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.top-bar.scrolled .page-title {
+  font-size: 18px;
+}
+
+.action-btn {
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.top-bar.scrolled .action-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 8px;
+}
