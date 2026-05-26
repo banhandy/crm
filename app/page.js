@@ -982,6 +982,123 @@ export default function CRMHome() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Full-width visual Gantt chart / timeline tracking report for FAI items */}
+                  <div className="glass-panel section-card" style={{ marginTop: '24px', width: '100%' }}>
+                    <div className="section-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
+                      <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileCheck size={20} color="var(--color-won)" />
+                        🛠️ Product Engineering FAI Timeline & Quality Tracker
+                      </h2>
+                      <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        Visual Gantt milestones for items undergoing First Article Inspection (FAI)
+                      </p>
+                    </div>
+
+                    {(() => {
+                      // Filter items that are PO Won or have active FAI inspections
+                      const faiItems = inquiries.flatMap(inq => 
+                        (inq.inquiry_items || []).map(item => ({
+                          ...item,
+                          customerName: inq.customers?.company_name,
+                          inquiryDate: inq.inquiry_date,
+                          quotationDate: inq.quotation_date,
+                          quotationNumber: inq.quotation_number,
+                          parentStatus: inq.status,
+                          parentId: inq.id,
+                          inqRef: inq
+                        }))
+                      ).filter(item => item.parentStatus === 'PO Won' || item.status === 'PO Won' || (item.fai_status && item.fai_status !== 'Pending'));
+
+                      if (faiItems.length === 0) {
+                        return (
+                          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                            <AlertCircle size={36} style={{ marginBottom: '12px', color: 'var(--text-muted)', opacity: 0.6 }} />
+                            <p style={{ fontWeight: '600', color: 'var(--text-main)' }}>No Active FAI Tracking Items</p>
+                            <p style={{ fontSize: '13px', marginTop: '4px' }}>Items marked as "PO Won" or having active FAI inspections will automatically display a Gantt timeline here.</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="fai-gantt-container">
+                          {faiItems.map((item, idx) => {
+                            // Calculate progress based on passed milestones
+                            let progress = 0;
+                            if (item.fai_dimensions === 'Passed') progress += 33;
+                            if (item.fai_material_cert === 'Passed') progress += 33;
+                            if (item.fai_test_report === 'Passed') progress += 34;
+
+                            const dimStatus = item.fai_dimensions || 'Pending';
+                            const matStatus = item.fai_material_cert || 'Pending';
+                            const testStatus = item.fai_test_report || 'Pending';
+
+                            return (
+                              <div key={idx} className="fai-gantt-row" onClick={() => openInquiryDrawer(item.inqRef)}>
+                                <div className="fai-gantt-info">
+                                  <span className="fai-gantt-customer">{item.customerName}</span>
+                                  <span className="fai-gantt-item">{item.item_name}</span>
+                                  <span className="fai-gantt-engineer">
+                                    👷 Engineer: <strong style={{ color: 'var(--text-main)' }}>{item.fai_engineer || 'Unassigned'}</strong>
+                                  </span>
+                                </div>
+
+                                <div className="fai-timeline-track">
+                                  {/* Visual Progress Bar */}
+                                  <div 
+                                    className={`fai-timeline-bar ${item.fai_status === 'Approved' ? 'won' : 'progress'}`}
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                  
+                                  {/* Milestone 1: Dimensions */}
+                                  <div className={`fai-milestone ${dimStatus === 'Passed' ? 'passed' : dimStatus === 'Failed' ? 'failed' : 'pending'}`}>
+                                    <span className="fai-milestone-label">📐 Dimensions</span>
+                                  </div>
+
+                                  {/* Milestone 2: Material Cert */}
+                                  <div className={`fai-milestone ${matStatus === 'Passed' ? 'passed' : matStatus === 'Failed' ? 'failed' : 'pending'}`}>
+                                    <span className="fai-milestone-label">📄 Material Cert</span>
+                                  </div>
+
+                                  {/* Milestone 3: Testing */}
+                                  <div className={`fai-milestone ${testStatus === 'Passed' ? 'passed' : testStatus === 'Failed' ? 'failed' : 'pending'}`}>
+                                    <span className="fai-milestone-label">🔬 Test Report</span>
+                                  </div>
+                                </div>
+
+                                <div className="fai-gantt-dates">
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '11px', color: 'var(--text-muted)' }}>
+                                    <span>Ordered:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                                      {item.inquiryDate ? new Date(item.inquiryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
+                                    </span>
+                                  </div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '11px', color: 'var(--text-muted)' }}>
+                                    <span>Sign-off Target:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--color-accent)' }}>
+                                      {item.fai_date ? new Date(item.fai_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
+                                    </span>
+                                  </div>
+                                  <div style={{ marginTop: '4px' }}>
+                                    <span 
+                                      className="fai-gantt-status-badge" 
+                                      style={{
+                                        background: item.fai_status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : item.fai_status === 'Rejected' ? 'rgba(239, 68, 68, 0.1)' : item.fai_status === 'In Progress' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(255,255,255,0.03)',
+                                        color: item.fai_status === 'Approved' ? 'var(--color-won)' : item.fai_status === 'Rejected' ? 'var(--color-stale)' : item.fai_status === 'In Progress' ? 'var(--color-follow)' : 'var(--text-muted)',
+                                        borderColor: item.fai_status === 'Approved' ? 'rgba(16, 185, 129, 0.2)' : item.fai_status === 'Rejected' ? 'rgba(239, 68, 68, 0.2)' : item.fai_status === 'In Progress' ? 'rgba(245, 158, 11, 0.2)' : 'var(--border-color)'
+                                      }}
+                                    >
+                                      {item.fai_status === 'Approved' ? 'Qualified' : item.fai_status === 'In Progress' ? 'Trial Run' : item.fai_status || 'Pending'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
 
@@ -1747,7 +1864,9 @@ export default function CRMHome() {
               <input 
                 type="number" 
                 className="form-input" 
-                placeholder="Calculated automatically or custom input" 
+                placeholder="Calculated automatically from Quotation Date" 
+                disabled
+                style={{ cursor: 'not-allowed', opacity: 0.6, background: 'rgba(255,255,255,0.02)' }}
                 value={selectedInquiry.lead_time_days || ''}
                 onChange={e => setSelectedInquiry({ ...selectedInquiry, lead_time_days: e.target.value })}
               />
