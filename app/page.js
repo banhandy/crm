@@ -82,7 +82,7 @@ export default function CRMHome() {
   // Form states for new inquiry
   const [newInquiry, setNewInquiry] = useState({
     customer_id: '',
-    category: 'standard',
+    category: 'others',
     item_name: '',
     quotation_number: '',
     lead_time_days: '',
@@ -98,6 +98,7 @@ export default function CRMHome() {
     address: '',
     email_address: '',
     pic_name: '',
+    client_contact_person: '',
     status_email: 'Active'
   });
 
@@ -291,6 +292,7 @@ export default function CRMHome() {
         address: '',
         email_address: '',
         pic_name: '',
+        client_contact_person: '',
         status_email: 'Active'
       });
       setIsAddCustomerOpen(false);
@@ -319,7 +321,7 @@ export default function CRMHome() {
       // Reset & Close
       setNewInquiry({
         customer_id: '',
-        category: 'standard',
+        category: 'others',
         item_name: '',
         quotation_number: '',
         lead_time_days: '',
@@ -742,9 +744,12 @@ export default function CRMHome() {
                         value={categoryFilter}
                         onChange={e => setCategoryFilter(e.target.value)}
                       >
-                        <option value="all">All Types</option>
-                        <option value="standard">Standard</option>
-                        <option value="tvb">TVB</option>
+                        <option value="all">All Categories</option>
+                        <option value="sand casting">Sand Casting</option>
+                        <option value="fabrication">Fabrication</option>
+                        <option value="investment">Investment Casting</option>
+                        <option value="forging">Forging</option>
+                        <option value="others">Others</option>
                       </select>
 
                       <select 
@@ -766,7 +771,7 @@ export default function CRMHome() {
                         onChange={e => setPicFilter(e.target.value)}
                       >
                         <option value="all">All PICs</option>
-                        {Array.from(new Set(customers.map(c => c.pic_name).filter(Boolean))).map(pic => (
+                        {['AFIF NI', 'PUTRI', 'ERVAN', 'NOVY', 'RANU'].map(pic => (
                           <option key={pic} value={pic}>{pic}</option>
                         ))}
                       </select>
@@ -895,8 +900,14 @@ export default function CRMHome() {
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
                                 <UserCheck size={16} />
-                                <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>PIC: {cust.pic_name || 'Unassigned'}</span>
+                                <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>Sales Owner: {cust.pic_name || 'Unassigned'}</span>
                               </div>
+                              {cust.client_contact_person && (
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', color: 'var(--text-muted)', fontSize: '13px', background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', marginTop: '4px' }}>
+                                  <Users size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
+                                  <span style={{ color: 'var(--text-muted)' }}>Client: <strong style={{ color: 'var(--text-main)', fontWeight: '500' }}>{cust.client_contact_person}</strong></span>
+                                </div>
+                              )}
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
@@ -961,8 +972,11 @@ export default function CRMHome() {
                 value={selectedInquiry.category}
                 onChange={e => setSelectedInquiry({ ...selectedInquiry, category: e.target.value })}
               >
-                <option value="standard">STANDARD</option>
-                <option value="tvb">TVB</option>
+                <option value="others">Others</option>
+                <option value="sand casting">Sand Casting</option>
+                <option value="fabrication">Fabrication</option>
+                <option value="investment">Investment Casting</option>
+                <option value="forging">Forging</option>
               </select>
             </div>
 
@@ -974,6 +988,16 @@ export default function CRMHome() {
                 value={selectedInquiry.inquiry_date || ''}
                 disabled 
                 style={{ opacity: 0.6, cursor: 'not-allowed' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Client Contact Person</label>
+              <textarea 
+                className="form-textarea" 
+                value={selectedInquiry.customers?.client_contact_person || 'No contact person registered'}
+                disabled 
+                style={{ opacity: 0.7, cursor: 'not-allowed', minHeight: '60px' }}
               />
             </div>
 
@@ -1118,8 +1142,11 @@ export default function CRMHome() {
                 value={newInquiry.category}
                 onChange={e => setNewInquiry({ ...newInquiry, category: e.target.value })}
               >
-                <option value="standard">Standard Inquiry</option>
-                <option value="tvb">TVB Inquiry</option>
+                <option value="others">Others</option>
+                <option value="sand casting">Sand Casting</option>
+                <option value="fabrication">Fabrication</option>
+                <option value="investment">Investment Casting</option>
+                <option value="forging">Forging</option>
               </select>
             </div>
 
@@ -1237,6 +1264,16 @@ export default function CRMHome() {
                 placeholder="Enter postal street address..." 
                 value={newCustomer.address}
                 onChange={e => setNewCustomer({ ...newCustomer, address: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Client Contact Person</label>
+              <textarea 
+                className="form-textarea" 
+                placeholder="e.g. Pak Wafi, +62 812..." 
+                value={newCustomer.client_contact_person || ''}
+                onChange={e => setNewCustomer({ ...newCustomer, client_contact_person: e.target.value })}
               />
             </div>
 
