@@ -49,6 +49,17 @@ const calculateWorkingDays = (startDateStr, endDateStr) => {
   return count;
 };
 
+// Helper to calculate total value of an inquiry (items total + tooling costs)
+const getInquiryTotal = (inq) => {
+  const currencySym = inq.currency === 'EUR' ? '€' : inq.currency === 'IDR' ? 'Rp' : '$';
+  const items = inq.inquiry_items || [];
+  const itemsTotal = items.reduce((sum, item) => sum + (parseFloat(item.total_price) || 0), 0);
+  const toolingTotal = items.reduce((sum, item) => sum + (parseFloat(item.tooling_cost) || 0), 0);
+  const grandTotal = itemsTotal + toolingTotal;
+  if (grandTotal === 0) return '-';
+  return `${currencySym} ${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 export default function CRMHome() {
   // Authentication States
   const [session, setSession] = useState(null);
@@ -83,7 +94,19 @@ export default function CRMHome() {
   const [newInquiry, setNewInquiry] = useState({
     customer_id: '',
     category: 'others',
-    item_name: '',
+    items: [{
+      item_name: '',
+      material: '',
+      process: '',
+      tipe_proses: 'others',
+      qty: 1,
+      cast_price: '',
+      mach_price: '',
+      surface_treatment: '',
+      packing_cost: '',
+      cfr: '',
+      tooling_cost: ''
+    }],
     quotation_number: '',
     lead_time_days: '',
     remark: '',
@@ -114,14 +137,18 @@ export default function CRMHome() {
       if (custErr) throw custErr;
       setCustomers(custData || []);
 
-      // Fetch inquiries with customer info join
+      // Fetch inquiries with customer and sub-items joins
       const { data: inqData, error: inqErr } = await supabase
         .from('inquiries')
         .select(`
           *,
           customers (
             company_name,
-            pic_name
+            pic_name,
+            client_contact_person
+          ),
+          inquiry_items (
+            *
           )
         `)
         .order('created_at', { ascending: false });
@@ -179,9 +206,22 @@ export default function CRMHome() {
       )
       .subscribe();
 
+    // Subscribe to inquiry_items updates
+    const inquiryItemsChannel = supabase
+      .channel('inquiry_items_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'inquiry_items' },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(inquiriesChannel);
       supabase.removeChannel(customersChannel);
+      supabase.removeChannel(inquiryItemsChannel);
     };
   }, [session]);
 
@@ -257,16 +297,21 @@ export default function CRMHome() {
   // Filtering Logic for Inquiries Table
   const filteredInquiries = inquiries.filter(inq => {
     const custName = inq.customers?.company_name || '';
-    const itemName = inq.item_name || '';
     const qNo = inq.quotation_number || '';
     const picName = inq.customers?.pic_name || '';
     const category = inq.category || '';
     const status = inq.status || '';
+    const items = inq.inquiry_items || [];
 
     const matchesSearch = 
       custName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      qNo.toLowerCase().includes(searchQuery.toLowerCase());
+      qNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      items.some(item => 
+        (item.item_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.material || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.process || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.tipe_proses || '').toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
     const matchesStatus = statusFilter === 'all' ? true : status === statusFilter;
     const matchesPIC = picFilter === 'all' ? true : picName === picFilter;
@@ -306,23 +351,79 @@ export default function CRMHome() {
   const handleAddInquiry = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
-        ...newInquiry,
-        lead_time_days: newInquiry.lead_time_days ? parseInt(newInquiry.lead_time_days) : null,
+      // 1. Insert the Inquiry first
+      const inqPayload = {
+        customer_id: newInquiry.customer_id,
+        category: newInquiry.category,
         quotation_number: newInquiry.quotation_number || null,
+        lead_time_days: newInquiry.lead_time_days ? parseInt(newInquiry.lead_time_days) : null,
+        remark: newInquiry.remark || '',
+        status: newInquiry.status,
         last_activity_at: new Date().toISOString()
       };
       
-      const { error } = await supabase
+      const { data: createdInqs, error: inqErr } = await supabase
         .from('inquiries')
-        .insert([payload]);
-      if (error) throw error;
+        .insert([inqPayload])
+        .select();
+      if (inqErr) throw inqErr;
+      if (!createdInqs || createdInqs.length === 0) {
+        throw new Error('Failed to retrieve created Inquiry record.');
+      }
+      
+      const newInqId = createdInqs[0].id;
+
+      // 2. Insert corresponding items referencing newInqId
+      const itemsPayload = newInquiry.items.map(item => {
+        const castPrice = item.cast_price ? parseFloat(item.cast_price) : 0;
+        const machPrice = item.mach_price ? parseFloat(item.mach_price) : 0;
+        const surfaceTreatment = item.surface_treatment ? parseFloat(item.surface_treatment) : 0;
+        const packingCost = item.packing_cost ? parseFloat(item.packing_cost) : 0;
+        const cfr = item.cfr ? parseFloat(item.cfr) : 0;
+        const qty = item.qty ? parseInt(item.qty) : 0;
+        const totalPricePerQty = castPrice + machPrice + surfaceTreatment + packingCost + cfr;
+        const totalPrice = totalPricePerQty * qty;
+
+        return {
+          inquiry_id: newInqId,
+          item_name: item.item_name || 'Unnamed Item',
+          material: item.material || null,
+          process: item.process || null,
+          tipe_proses: item.tipe_proses || null,
+          qty: qty || null,
+          cast_price: item.cast_price ? parseFloat(item.cast_price) : null,
+          mach_price: item.mach_price ? parseFloat(item.mach_price) : null,
+          surface_treatment: item.surface_treatment ? parseFloat(item.surface_treatment) : null,
+          packing_cost: item.packing_cost ? parseFloat(item.packing_cost) : null,
+          cfr: item.cfr ? parseFloat(item.cfr) : null,
+          total_price_per_qty: totalPricePerQty || null,
+          total_price: totalPrice || null,
+          tooling_cost: item.tooling_cost ? parseFloat(item.tooling_cost) : null
+        };
+      });
+
+      const { error: itemsErr } = await supabase
+        .from('inquiry_items')
+        .insert(itemsPayload);
+      if (itemsErr) throw itemsErr;
 
       // Reset & Close
       setNewInquiry({
         customer_id: '',
         category: 'others',
-        item_name: '',
+        items: [{
+          item_name: '',
+          material: '',
+          process: '',
+          tipe_proses: 'others',
+          qty: 1,
+          cast_price: '',
+          mach_price: '',
+          surface_treatment: '',
+          packing_cost: '',
+          cfr: '',
+          tooling_cost: ''
+        }],
         quotation_number: '',
         lead_time_days: '',
         remark: '',
@@ -339,6 +440,7 @@ export default function CRMHome() {
   const handleUpdateInquiry = async (e) => {
     e.preventDefault();
     try {
+      // 1. Update the parent inquiry
       const payload = {
         category: selectedInquiry.category,
         quotation_date: selectedInquiry.quotation_date || null,
@@ -351,11 +453,68 @@ export default function CRMHome() {
         last_activity_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      const { error: inqErr } = await supabase
         .from('inquiries')
         .update(payload)
         .eq('id', selectedInquiry.id);
-      if (error) throw error;
+      if (inqErr) throw inqErr;
+
+      // 2. Synchronize nested inquiry items
+      const currentItems = selectedInquiry.inquiry_items || [];
+      const itemIdsToKeep = currentItems.filter(item => item.id).map(item => item.id);
+
+      // Delete items removed in UI
+      if (itemIdsToKeep.length > 0) {
+        const { error: deleteErr } = await supabase
+          .from('inquiry_items')
+          .delete()
+          .eq('inquiry_id', selectedInquiry.id)
+          .not('id', 'in', `(${itemIdsToKeep.join(',')})`);
+        if (deleteErr) throw deleteErr;
+      } else {
+        const { error: deleteErr } = await supabase
+          .from('inquiry_items')
+          .delete()
+          .eq('inquiry_id', selectedInquiry.id);
+        if (deleteErr) throw deleteErr;
+      }
+
+      // Upsert remaining items
+      if (currentItems.length > 0) {
+        const itemsToUpsert = currentItems.map(item => {
+          const castPrice = item.cast_price ? parseFloat(item.cast_price) : 0;
+          const machPrice = item.mach_price ? parseFloat(item.mach_price) : 0;
+          const surfaceTreatment = item.surface_treatment ? parseFloat(item.surface_treatment) : 0;
+          const packingCost = item.packing_cost ? parseFloat(item.packing_cost) : 0;
+          const cfr = item.cfr ? parseFloat(item.cfr) : 0;
+          const qty = item.qty ? parseInt(item.qty) : 0;
+          const totalPricePerQty = castPrice + machPrice + surfaceTreatment + packingCost + cfr;
+          const totalPrice = totalPricePerQty * qty;
+
+          return {
+            id: item.id || undefined, // let database generate UUID if new
+            inquiry_id: selectedInquiry.id,
+            item_name: item.item_name || 'Unnamed Item',
+            material: item.material || null,
+            process: item.process || null,
+            tipe_proses: item.tipe_proses || null,
+            qty: qty || null,
+            cast_price: item.cast_price ? parseFloat(item.cast_price) : null,
+            mach_price: item.mach_price ? parseFloat(item.mach_price) : null,
+            surface_treatment: item.surface_treatment ? parseFloat(item.surface_treatment) : null,
+            packing_cost: item.packing_cost ? parseFloat(item.packing_cost) : null,
+            cfr: item.cfr ? parseFloat(item.cfr) : null,
+            total_price_per_qty: totalPricePerQty || null,
+            total_price: totalPrice || null,
+            tooling_cost: item.tooling_cost ? parseFloat(item.tooling_cost) : null
+          };
+        });
+
+        const { error: upsertErr } = await supabase
+          .from('inquiry_items')
+          .upsert(itemsToUpsert);
+        if (upsertErr) throw upsertErr;
+      }
 
       setIsDrawerOpen(false);
       setSelectedInquiry(null);
@@ -630,8 +789,9 @@ export default function CRMHome() {
                           <thead>
                             <tr>
                               <th>Customer</th>
-                              <th>Item Name</th>
+                              <th>Items</th>
                               <th>Quot. #</th>
+                              <th>Inquiry Value</th>
                               <th>Status</th>
                               <th>Last Update</th>
                             </tr>
@@ -643,9 +803,24 @@ export default function CRMHome() {
                                   <span className="stale-pulse"></span>
                                   {inq.customers?.company_name}
                                 </td>
-                                <td>{inq.item_name}</td>
+                                <td>
+                                  {inq.inquiry_items && inq.inquiry_items.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                      {inq.inquiry_items.map((item, idx) => (
+                                        <span key={item.id || idx} style={{ fontSize: '13px' }}>
+                                          {item.item_name} {item.qty ? `(x${item.qty})` : ''}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No items</span>
+                                  )}
+                                </td>
                                 <td style={{ color: inq.quotation_number ? 'var(--text-main)' : 'var(--color-pending)' }}>
                                   {inq.quotation_number || 'Missing'}
+                                </td>
+                                <td style={{ fontWeight: '600', color: 'var(--color-won)' }}>
+                                  {getInquiryTotal(inq)}
                                 </td>
                                 <td>
                                   <span className="status-badge badge-stale">Stale Follow-up</span>
@@ -759,7 +934,7 @@ export default function CRMHome() {
                       >
                         <option value="all">All Statuses</option>
                         <option value="Pending Quotation">Pending Quotation</option>
-                        <option value="Quotation Sent">Quotation Sent</option>
+                        <option value="Submitted">Submitted</option>
                         <option value="Follow Up">Follow Up</option>
                         <option value="PO Won">PO Won</option>
                         <option value="Canceled">Canceled</option>
@@ -791,10 +966,11 @@ export default function CRMHome() {
                           <tr>
                             <th>Inquiry Date</th>
                             <th>Customer</th>
-                            <th>Item Name</th>
+                            <th>Items & Details</th>
                             <th>Type</th>
                             <th>Quot. #</th>
                             <th>Lead Time</th>
+                            <th>Value</th>
                             <th>PIC</th>
                             <th>Status</th>
                           </tr>
@@ -809,7 +985,29 @@ export default function CRMHome() {
                                   {isStaleItem && <span className="stale-pulse"></span>}
                                   {inq.customers?.company_name}
                                 </td>
-                                <td>{inq.item_name}</td>
+                                <td>
+                                  {inq.inquiry_items && inq.inquiry_items.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                      {inq.inquiry_items.map((item, idx) => (
+                                        <div key={item.id || idx} style={{ display: 'flex', flexDirection: 'column', padding: '4px 6px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontWeight: '600', fontSize: '13px' }}>{item.item_name}</span>
+                                            {item.qty && <span style={{ color: 'var(--color-accent)', fontWeight: '700', fontSize: '11px' }}>x{item.qty}</span>}
+                                          </div>
+                                          {(item.material || item.tipe_proses) && (
+                                            <div style={{ display: 'flex', gap: '6px', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                              {item.material && <span>{item.material}</span>}
+                                              {item.material && item.tipe_proses && <span>•</span>}
+                                              {item.tipe_proses && <span style={{ textTransform: 'uppercase' }}>{item.tipe_proses}</span>}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No items</span>
+                                  )}
+                                </td>
                                 <td>
                                   <span style={{ fontSize: '11px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
                                     {inq.category}
@@ -819,6 +1017,7 @@ export default function CRMHome() {
                                   {inq.quotation_number || 'Waiting Input'}
                                 </td>
                                 <td>{inq.lead_time_days ? `${inq.lead_time_days} days` : '-'}</td>
+                                <td style={{ fontWeight: '600', color: 'var(--color-won)' }}>{getInquiryTotal(inq)}</td>
                                 <td style={{ fontWeight: '500' }}>{inq.customers?.pic_name}</td>
                                 <td>
                                   {isStaleItem ? (
@@ -827,7 +1026,7 @@ export default function CRMHome() {
                                     <>
                                       {inq.status === 'PO Won' && <span className="status-badge badge-won">PO Won</span>}
                                       {inq.status === 'Pending Quotation' && <span className="status-badge badge-pending">Pending Quotation</span>}
-                                      {inq.status === 'Quotation Sent' && <span className="status-badge badge-pending" style={{ color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'var(--color-accent-glow)' }}>Quotation Sent</span>}
+                                      {inq.status === 'Submitted' && <span className="status-badge badge-pending" style={{ color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'var(--color-accent-glow)' }}>Submitted</span>}
                                       {inq.status === 'Follow Up' && <span className="status-badge badge-follow">Follow Up</span>}
                                       {inq.status === 'Canceled' && <span className="status-badge badge-canceled">Canceled</span>}
                                     </>
@@ -954,15 +1153,284 @@ export default function CRMHome() {
 
         {selectedInquiry && (
           <form className="drawer-body" onSubmit={handleUpdateInquiry}>
-            <div className="form-group">
-              <label className="form-label">Item Name</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                value={selectedInquiry.item_name}
-                disabled 
-                style={{ opacity: 0.6, cursor: 'not-allowed' }}
-              />
+            {/* Line Items Section */}
+            <div className="form-group" style={{ marginTop: '8px' }}>
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+                <span>Line Items</span>
+                <span style={{ fontSize: '11px', textTransform: 'none', color: 'var(--text-muted)' }}>{(selectedInquiry.inquiry_items || []).length} item(s)</span>
+              </label>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
+                {(selectedInquiry.inquiry_items || []).map((item, index) => {
+                  // Live calculations for display
+                  const cast = parseFloat(item.cast_price) || 0;
+                  const mach = parseFloat(item.mach_price) || 0;
+                  const surf = parseFloat(item.surface_treatment) || 0;
+                  const pack = parseFloat(item.packing_cost) || 0;
+                  const cfrVal = parseFloat(item.cfr) || 0;
+                  const quantity = parseInt(item.qty) || 0;
+                  const liveTotalPerQty = cast + mach + surf + pack + cfrVal;
+                  const liveTotalPrice = liveTotalPerQty * quantity;
+                  
+                  const isExpanded = item.showDetails;
+
+                  return (
+                    <div key={index} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-accent)' }}>Item #{index + 1}</span>
+                        {(selectedInquiry.inquiry_items || []).length > 1 && (
+                          <button 
+                            type="button" 
+                            style={{ background: 'none', border: 'none', color: 'var(--color-stale)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
+                            onClick={() => {
+                              const updated = selectedInquiry.inquiry_items.filter((_, idx) => idx !== index);
+                              setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                            }}
+                          >
+                            <X size={14} /> Remove
+                          </button>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px' }}>Item / Product Name *</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="e.g. Pump Housing DN150" 
+                            required
+                            value={item.item_name || ''}
+                            onChange={e => {
+                              const updated = [...selectedInquiry.inquiry_items];
+                              updated[index].item_name = e.target.value;
+                              setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                            }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px' }}>Qty *</label>
+                          <input 
+                            type="number" 
+                            className="form-input" 
+                            placeholder="Qty" 
+                            required
+                            min="1"
+                            value={item.qty || ''}
+                            onChange={e => {
+                              const updated = [...selectedInquiry.inquiry_items];
+                              updated[index].qty = e.target.value;
+                              setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px' }}>Material</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="e.g. AISI 316" 
+                            value={item.material || ''}
+                            onChange={e => {
+                              const updated = [...selectedInquiry.inquiry_items];
+                              updated[index].material = e.target.value;
+                              setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                            }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px' }}>Process</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="e.g. Casting + Machining" 
+                            value={item.process || ''}
+                            onChange={e => {
+                              const updated = [...selectedInquiry.inquiry_items];
+                              updated[index].process = e.target.value;
+                              setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '4px' }}>
+                        <button
+                          type="button"
+                          style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          onClick={() => {
+                            const updated = [...selectedInquiry.inquiry_items];
+                            updated[index].showDetails = !updated[index].showDetails;
+                            setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                          }}
+                        >
+                          {isExpanded ? 'Hide Financial Details ▲' : 'Show Financial Details ▼'}
+                        </button>
+                      </div>
+
+                      {isExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '6px', padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '11px' }}>Tipe Proses</label>
+                              <select 
+                                className="form-select"
+                                style={{ padding: '8px' }}
+                                value={item.tipe_proses || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].tipe_proses = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              >
+                                <option value="">-- Select Type --</option>
+                                <option value="SAND CASTING">Sand Casting</option>
+                                <option value="FABRICATION">Fabrication</option>
+                                <option value="INVESTMENT CASTING">Investment Casting</option>
+                                <option value="FORGING">Forging</option>
+                                <option value="others">Others</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '11px' }}>Tooling Cost</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '8px' }}
+                                placeholder="0.00" 
+                                value={item.tooling_cost || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].tooling_cost = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>Cast Price</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.cast_price || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].cast_price = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>Mach Price</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.mach_price || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].mach_price = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>Surface Trt.</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.surface_treatment || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].surface_treatment = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>Packing Cost</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.packing_cost || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].packing_cost = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>CFR</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.cfr || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].cfr = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', fontSize: '12px' }}>
+                            <div>
+                              <span style={{ color: 'var(--text-muted)' }}>Total / Qty: </span>
+                              <strong style={{ color: 'var(--text-main)' }}>{liveTotalPerQty.toFixed(2)}</strong>
+                            </div>
+                            <div>
+                              <span style={{ color: 'var(--text-muted)' }}>Total Price: </span>
+                              <strong style={{ color: 'var(--color-won)' }}>{liveTotalPrice.toFixed(2)}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button 
+                type="button" 
+                className="action-btn"
+                style={{ marginTop: '12px', padding: '8px 16px', fontSize: '13px', alignSelf: 'flex-start' }}
+                onClick={() => {
+                  const updated = [...(selectedInquiry.inquiry_items || [])];
+                  updated.push({
+                    item_name: '',
+                    material: '',
+                    process: '',
+                    tipe_proses: '',
+                    qty: 1,
+                    cast_price: '',
+                    mach_price: '',
+                    surface_treatment: '',
+                    packing_cost: '',
+                    cfr: '',
+                    tooling_cost: '',
+                    showDetails: false
+                  });
+                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                }}
+              >
+                <Plus size={16} /> Add Line Item
+              </button>
             </div>
 
             <div className="form-group">
@@ -1052,7 +1520,7 @@ export default function CRMHome() {
                 onChange={e => setSelectedInquiry({ ...selectedInquiry, status: e.target.value })}
               >
                 <option value="Pending Quotation">Pending Quotation</option>
-                <option value="Quotation Sent">Quotation Sent</option>
+                <option value="Submitted">Submitted</option>
                 <option value="Follow Up">Follow Up</option>
                 <option value="PO Won">PO Won</option>
                 <option value="Canceled">Canceled</option>
@@ -1150,16 +1618,284 @@ export default function CRMHome() {
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Item / Product Name</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Enter item description..." 
-                required
-                value={newInquiry.item_name}
-                onChange={e => setNewInquiry({ ...newInquiry, item_name: e.target.value })}
-              />
+            {/* Line Items Section */}
+            <div className="form-group" style={{ marginTop: '8px' }}>
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+                <span>Line Items</span>
+                <span style={{ fontSize: '11px', textTransform: 'none', color: 'var(--text-muted)' }}>{newInquiry.items.length} item(s)</span>
+              </label>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
+                {newInquiry.items.map((item, index) => {
+                  // Live calculations for display
+                  const cast = parseFloat(item.cast_price) || 0;
+                  const mach = parseFloat(item.mach_price) || 0;
+                  const surf = parseFloat(item.surface_treatment) || 0;
+                  const pack = parseFloat(item.packing_cost) || 0;
+                  const cfrVal = parseFloat(item.cfr) || 0;
+                  const quantity = parseInt(item.qty) || 0;
+                  const liveTotalPerQty = cast + mach + surf + pack + cfrVal;
+                  const liveTotalPrice = liveTotalPerQty * quantity;
+                  
+                  const isExpanded = item.showDetails;
+
+                  return (
+                    <div key={index} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-accent)' }}>Item #{index + 1}</span>
+                        {newInquiry.items.length > 1 && (
+                          <button 
+                            type="button" 
+                            style={{ background: 'none', border: 'none', color: 'var(--color-stale)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
+                            onClick={() => {
+                              const updated = newInquiry.items.filter((_, idx) => idx !== index);
+                              setNewInquiry({ ...newInquiry, items: updated });
+                            }}
+                          >
+                            <X size={14} /> Remove
+                          </button>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px' }}>Item / Product Name *</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="e.g. Pump Housing DN150" 
+                            required
+                            value={item.item_name}
+                            onChange={e => {
+                              const updated = [...newInquiry.items];
+                              updated[index].item_name = e.target.value;
+                              setNewInquiry({ ...newInquiry, items: updated });
+                            }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px' }}>Qty *</label>
+                          <input 
+                            type="number" 
+                            className="form-input" 
+                            placeholder="Qty" 
+                            required
+                            min="1"
+                            value={item.qty}
+                            onChange={e => {
+                              const updated = [...newInquiry.items];
+                              updated[index].qty = e.target.value;
+                              setNewInquiry({ ...newInquiry, items: updated });
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px' }}>Material</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="e.g. AISI 316" 
+                            value={item.material || ''}
+                            onChange={e => {
+                              const updated = [...newInquiry.items];
+                              updated[index].material = e.target.value;
+                              setNewInquiry({ ...newInquiry, items: updated });
+                            }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px' }}>Process</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="e.g. Casting + Machining" 
+                            value={item.process || ''}
+                            onChange={e => {
+                              const updated = [...newInquiry.items];
+                              updated[index].process = e.target.value;
+                              setNewInquiry({ ...newInquiry, items: updated });
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '4px' }}>
+                        <button
+                          type="button"
+                          style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          onClick={() => {
+                            const updated = [...newInquiry.items];
+                            updated[index].showDetails = !updated[index].showDetails;
+                            setNewInquiry({ ...newInquiry, items: updated });
+                          }}
+                        >
+                          {isExpanded ? 'Hide Financial Details ▲' : 'Show Financial Details ▼'}
+                        </button>
+                      </div>
+
+                      {isExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '6px', padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '11px' }}>Tipe Proses</label>
+                              <select 
+                                className="form-select"
+                                style={{ padding: '8px' }}
+                                value={item.tipe_proses || ''}
+                                onChange={e => {
+                                  const updated = [...newInquiry.items];
+                                  updated[index].tipe_proses = e.target.value;
+                                  setNewInquiry({ ...newInquiry, items: updated });
+                                }}
+                              >
+                                <option value="">-- Select Type --</option>
+                                <option value="SAND CASTING">Sand Casting</option>
+                                <option value="FABRICATION">Fabrication</option>
+                                <option value="INVESTMENT CASTING">Investment Casting</option>
+                                <option value="FORGING">Forging</option>
+                                <option value="others">Others</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '11px' }}>Tooling Cost</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '8px' }}
+                                placeholder="0.00" 
+                                value={item.tooling_cost || ''}
+                                onChange={e => {
+                                  const updated = [...newInquiry.items];
+                                  updated[index].tooling_cost = e.target.value;
+                                  setNewInquiry({ ...newInquiry, items: updated });
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>Cast Price</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.cast_price || ''}
+                                onChange={e => {
+                                  const updated = [...newInquiry.items];
+                                  updated[index].cast_price = e.target.value;
+                                  setNewInquiry({ ...newInquiry, items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>Mach Price</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.mach_price || ''}
+                                onChange={e => {
+                                  const updated = [...newInquiry.items];
+                                  updated[index].mach_price = e.target.value;
+                                  setNewInquiry({ ...newInquiry, items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>Surface Trt.</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.surface_treatment || ''}
+                                onChange={e => {
+                                  const updated = [...newInquiry.items];
+                                  updated[index].surface_treatment = e.target.value;
+                                  setNewInquiry({ ...newInquiry, items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>Packing Cost</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.packing_cost || ''}
+                                onChange={e => {
+                                  const updated = [...newInquiry.items];
+                                  updated[index].packing_cost = e.target.value;
+                                  setNewInquiry({ ...newInquiry, items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '9px' }}>CFR</label>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                placeholder="0" 
+                                value={item.cfr || ''}
+                                onChange={e => {
+                                  const updated = [...newInquiry.items];
+                                  updated[index].cfr = e.target.value;
+                                  setNewInquiry({ ...newInquiry, items: updated });
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', fontSize: '12px' }}>
+                            <div>
+                              <span style={{ color: 'var(--text-muted)' }}>Total / Qty: </span>
+                              <strong style={{ color: 'var(--text-main)' }}>{liveTotalPerQty.toFixed(2)}</strong>
+                            </div>
+                            <div>
+                              <span style={{ color: 'var(--text-muted)' }}>Total Price: </span>
+                              <strong style={{ color: 'var(--color-won)' }}>{liveTotalPrice.toFixed(2)}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button 
+                type="button" 
+                className="action-btn"
+                style={{ marginTop: '12px', padding: '8px 16px', fontSize: '13px', alignSelf: 'flex-start' }}
+                onClick={() => {
+                  const updated = [...newInquiry.items];
+                  updated.push({
+                    item_name: '',
+                    material: '',
+                    process: '',
+                    tipe_proses: '',
+                    qty: 1,
+                    cast_price: '',
+                    mach_price: '',
+                    surface_treatment: '',
+                    packing_cost: '',
+                    cfr: '',
+                    tooling_cost: '',
+                    showDetails: false
+                  });
+                  setNewInquiry({ ...newInquiry, items: updated });
+                }}
+              >
+                <Plus size={16} /> Add Line Item
+              </button>
             </div>
 
             <div className="form-group">
