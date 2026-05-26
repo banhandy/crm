@@ -24,7 +24,8 @@ import {
   Calendar,
   UserCheck,
   Lock,
-  LogOut
+  LogOut,
+  Menu
 } from 'lucide-react';
 
 // Helper to calculate working days (excluding weekends) between two dates
@@ -60,6 +61,28 @@ const getInquiryTotal = (inq) => {
   return `${currencySym} ${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+// Helper to resolve aggregate status based on individual items
+const getAggregateStatus = (inq) => {
+  const items = inq.inquiry_items || [];
+  if (items.length === 0) return inq.status || 'Pending Quotation';
+  
+  const total = items.length;
+  const statuses = items.map(item => item.status || 'Pending Quotation');
+  const wonCount = statuses.filter(s => s === 'PO Won').length;
+  const canceledCount = statuses.filter(s => s === 'Canceled').length;
+  
+  if (wonCount === total) return 'PO Won';
+  if (canceledCount === total) return 'Canceled';
+  
+  if (wonCount > 0) {
+    return `PO Won (${wonCount}/${total})`;
+  }
+  
+  if (statuses.includes('Follow Up')) return 'Follow Up';
+  if (statuses.includes('Submitted')) return 'Submitted';
+  return 'Pending Quotation';
+};
+
 export default function CRMHome() {
   // Authentication States
   const [session, setSession] = useState(null);
@@ -72,6 +95,7 @@ export default function CRMHome() {
   // Navigation & Theme States
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'inquiries', 'customers'
   const [theme, setTheme] = useState('dark');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Database States
   const [inquiries, setInquiries] = useState([]);
@@ -633,55 +657,103 @@ export default function CRMHome() {
   return (
     <div className="app-container">
       {/* 1. SIDEBAR NAVIGATION */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div>
-          <div className="logo-section">
-            <div className="logo-icon">C</div>
-            <span className="logo-text">CRM Core</span>
+          <div className="logo-section" style={{ display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'space-between', alignItems: 'center', padding: sidebarCollapsed ? '0 0 20px 0' : '0 12px 24px 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: sidebarCollapsed ? 'auto' : '100%' }}>
+              <div className="logo-icon" style={{ flexShrink: 0 }}>C</div>
+              {!sidebarCollapsed && <span className="logo-text">CRM Core</span>}
+            </div>
+            {!sidebarCollapsed && (
+              <button 
+                onClick={() => setSidebarCollapsed(true)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px', transition: 'background 0.2s' }}
+                className="sidebar-toggle-btn"
+                title="Collapse Sidebar"
+              >
+                <Menu size={18} />
+              </button>
+            )}
           </div>
 
-          <nav className="nav-links">
+          {sidebarCollapsed && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
+              <button 
+                onClick={() => setSidebarCollapsed(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px' }}
+                title="Expand Sidebar"
+              >
+                <Menu size={18} />
+              </button>
+            </div>
+          )}
+
+          <nav className="nav-links" style={{ gap: '12px' }}>
             <div 
               className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
               onClick={() => setActiveTab('dashboard')}
+              title={sidebarCollapsed ? "Dashboard" : ""}
+              style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
             >
-              <LayoutDashboard size={20} />
-              Dashboard
+              <LayoutDashboard size={20} style={{ flexShrink: 0 }} />
+              {!sidebarCollapsed && <span>Dashboard</span>}
             </div>
             <div 
               className={`nav-link ${activeTab === 'inquiries' ? 'active' : ''}`}
               onClick={() => setActiveTab('inquiries')}
+              title={sidebarCollapsed ? "Inquiries Pipeline" : ""}
+              style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
             >
-              <FileText size={20} />
-              Inquiries Pipeline
+              <FileText size={20} style={{ flexShrink: 0 }} />
+              {!sidebarCollapsed && <span>Inquiries Pipeline</span>}
             </div>
             <div 
               className={`nav-link ${activeTab === 'customers' ? 'active' : ''}`}
               onClick={() => setActiveTab('customers')}
+              title={sidebarCollapsed ? "Customer Contact" : ""}
+              style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
             >
-              <Users size={20} />
-              Customer Contact
+              <Users size={20} style={{ flexShrink: 0 }} />
+              {!sidebarCollapsed && <span>Customer Contact</span>}
             </div>
           </nav>
         </div>
 
-        <div className="sidebar-footer">
-          <button className="theme-toggle-btn" onClick={toggleTheme}>
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+        <div className="sidebar-footer" style={{ gap: '12px' }}>
+          <button 
+            className="theme-toggle-btn" 
+            onClick={toggleTheme}
+            title={sidebarCollapsed ? "Toggle Theme" : ""}
+            style={{ padding: sidebarCollapsed ? '10px 0' : '10px', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: sidebarCollapsed ? '0' : '10px' }}
+          >
+            {theme === 'dark' ? <Sun size={18} style={{ flexShrink: 0 }} /> : <Moon size={18} style={{ flexShrink: 0 }} />}
+            {!sidebarCollapsed && <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
           </button>
-          <button className="theme-toggle-btn" onClick={handleSignOut} style={{ color: 'var(--color-stale)', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
-            <LogOut size={18} />
-            Sign Out
+          <button 
+            className="theme-toggle-btn" 
+            onClick={handleSignOut} 
+            title={sidebarCollapsed ? "Sign Out" : ""}
+            style={{ 
+              color: 'var(--color-stale)', 
+              borderColor: 'rgba(239, 68, 68, 0.2)',
+              padding: sidebarCollapsed ? '10px 0' : '10px',
+              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+              gap: sidebarCollapsed ? '0' : '10px'
+            }}
+          >
+            <LogOut size={18} style={{ flexShrink: 0 }} />
+            {!sidebarCollapsed && <span>Sign Out</span>}
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '0 8px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', textAlign: 'center', lineHeight: '36px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: sidebarCollapsed ? '0' : '0 8px', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', textAlign: 'center', lineHeight: '36px', flexShrink: 0 }}>
               {session.user.email[0].toUpperCase()}
             </div>
-            <div>
-              <p style={{ fontSize: '13px', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '130px' }}>{session.user.email}</p>
-              <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Authorized</p>
-            </div>
+            {!sidebarCollapsed && (
+              <div>
+                <p style={{ fontSize: '13px', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '130px' }}>{session.user.email}</p>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Authorized</p>
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -805,12 +877,13 @@ export default function CRMHome() {
                                 </td>
                                 <td>
                                   {inq.inquiry_items && inq.inquiry_items.length > 0 ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                      {inq.inquiry_items.map((item, idx) => (
-                                        <span key={item.id || idx} style={{ fontSize: '13px' }}>
-                                          {item.item_name} {item.qty ? `(x${item.qty})` : ''}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span style={{ fontWeight: '600' }}>{inq.inquiry_items[0].item_name}</span>
+                                      {inq.inquiry_items.length > 1 && (
+                                        <span style={{ fontSize: '11px', background: 'var(--color-accent-glow)', color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '2px 8px', borderRadius: '20px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                                          +{inq.inquiry_items.length - 1} more
                                         </span>
-                                      ))}
+                                      )}
                                     </div>
                                   ) : (
                                     <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No items</span>
@@ -987,22 +1060,13 @@ export default function CRMHome() {
                                 </td>
                                 <td>
                                   {inq.inquiry_items && inq.inquiry_items.length > 0 ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                      {inq.inquiry_items.map((item, idx) => (
-                                        <div key={item.id || idx} style={{ display: 'flex', flexDirection: 'column', padding: '4px 6px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontWeight: '600', fontSize: '13px' }}>{item.item_name}</span>
-                                            {item.qty && <span style={{ color: 'var(--color-accent)', fontWeight: '700', fontSize: '11px' }}>x{item.qty}</span>}
-                                          </div>
-                                          {(item.material || item.tipe_proses) && (
-                                            <div style={{ display: 'flex', gap: '6px', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                              {item.material && <span>{item.material}</span>}
-                                              {item.material && item.tipe_proses && <span>•</span>}
-                                              {item.tipe_proses && <span style={{ textTransform: 'uppercase' }}>{item.tipe_proses}</span>}
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span style={{ fontWeight: '600' }}>{inq.inquiry_items[0].item_name}</span>
+                                      {inq.inquiry_items.length > 1 && (
+                                        <span style={{ fontSize: '11px', background: 'var(--color-accent-glow)', color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '2px 8px', borderRadius: '20px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                                          +{inq.inquiry_items.length - 1} more
+                                        </span>
+                                      )}
                                     </div>
                                   ) : (
                                     <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No items</span>
@@ -1257,7 +1321,7 @@ export default function CRMHome() {
                         </div>
                       </div>
 
-                      <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', gap: '16px', borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '4px' }}>
                         <button
                           type="button"
                           style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -1268,6 +1332,18 @@ export default function CRMHome() {
                           }}
                         >
                           {isExpanded ? 'Hide Financial Details ▲' : 'Show Financial Details ▼'}
+                        </button>
+                        
+                        <button
+                          type="button"
+                          style={{ background: 'none', border: 'none', color: 'var(--color-won)', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          onClick={() => {
+                            const updated = [...selectedInquiry.inquiry_items];
+                            updated[index].showFai = !updated[index].showFai;
+                            setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                          }}
+                        >
+                          {item.showFai ? 'Hide First Article FAI ▲' : '🛠️ Product Eng First Article ▼'}
                         </button>
                       </div>
 
@@ -1397,6 +1473,143 @@ export default function CRMHome() {
                             <div>
                               <span style={{ color: 'var(--text-muted)' }}>Total Price: </span>
                               <strong style={{ color: 'var(--color-won)' }}>{liveTotalPrice.toFixed(2)}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {item.showFai && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '6px', padding: '16px', background: 'var(--color-won-glow)', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(16,185,129,0.1)', paddingBottom: '8px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-won)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              First Article Inspection (FAI) Tracking
+                            </span>
+                            <span className="status-badge" style={{ 
+                              background: item.fai_status === 'Approved' ? 'rgba(16, 185, 129, 0.2)' : item.fai_status === 'Rejected' ? 'rgba(239, 68, 68, 0.2)' : item.fai_status === 'In Progress' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.05)',
+                              color: item.fai_status === 'Approved' ? 'var(--color-won)' : item.fai_status === 'Rejected' ? 'var(--color-stale)' : item.fai_status === 'In Progress' ? 'var(--color-follow)' : 'var(--text-muted)'
+                            }}>
+                              {item.fai_status || 'Pending'}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-won)', textTransform: 'none' }}>FAI Status</label>
+                              <select 
+                                className="form-select"
+                                style={{ padding: '8px' }}
+                                value={item.fai_status || 'Pending'}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].fai_status = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              >
+                                <option value="Pending">Pending Review</option>
+                                <option value="In Progress">In Progress / Trial</option>
+                                <option value="Approved">Approved / Qualified</option>
+                                <option value="Rejected">Rejected</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-won)', textTransform: 'none' }}>Responsible Engineer</label>
+                              <input 
+                                type="text" 
+                                className="form-input" 
+                                style={{ padding: '8px' }}
+                                placeholder="e.g. PUTRI" 
+                                value={item.fai_engineer || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].fai_engineer = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '10px', textTransform: 'none' }}>Dimensions Check</label>
+                              <select 
+                                className="form-select"
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                value={item.fai_dimensions || 'Pending'}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].fai_dimensions = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Passed">Passed</option>
+                                <option value="Failed">Failed</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '10px', textTransform: 'none' }}>Material Cert</label>
+                              <select 
+                                className="form-select"
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                value={item.fai_material_cert || 'Pending'}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].fai_material_cert = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Passed">Passed</option>
+                                <option value="Failed">Failed</option>
+                              </select>
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '10px', textTransform: 'none' }}>Testing Report</label>
+                              <select 
+                                className="form-select"
+                                style={{ padding: '6px', fontSize: '12px' }}
+                                value={item.fai_test_report || 'Pending'}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].fai_test_report = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Passed">Passed</option>
+                                <option value="Failed">Failed</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '11px', textTransform: 'none' }}>Remarks / Tolerance Notes</label>
+                              <textarea 
+                                className="form-textarea" 
+                                style={{ minHeight: '60px', padding: '8px', fontSize: '13px' }}
+                                placeholder="Note dimensional deviations or test parameters..." 
+                                value={item.fai_remarks || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].fai_remarks = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label" style={{ fontSize: '11px', textTransform: 'none' }}>Sign-off Date</label>
+                              <input 
+                                type="date" 
+                                className="form-input" 
+                                style={{ padding: '8px', fontSize: '13px' }}
+                                value={item.fai_date || ''}
+                                onChange={e => {
+                                  const updated = [...selectedInquiry.inquiry_items];
+                                  updated[index].fai_date = e.target.value;
+                                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                                }}
+                              />
                             </div>
                           </div>
                         </div>
