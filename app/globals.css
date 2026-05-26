@@ -564,6 +564,8 @@ body {
   display: flex;
   flex-direction: column;
   padding: 32px;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .drawer.open {
@@ -577,6 +579,7 @@ body {
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 20px;
   margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
 .drawer-close {
@@ -590,15 +593,61 @@ body {
 .drawer-body {
   flex-grow: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
+  width: 100%;
 }
+
+/* Responsive form grids inside drawer */
+.drawer-grid-2 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.drawer-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.drawer-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Item cards inside modal/drawer — must constrain overflow */
+.line-item-card {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
+
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0; /* Critical: allows form groups to shrink in grid cells */
 }
 
 .form-label {
@@ -616,6 +665,9 @@ body {
   color: var(--text-main);
   outline: none;
   font-size: 14px;
+  width: 100%;         /* Always fill the available column width */
+  box-sizing: border-box;
+  min-width: 0;        /* Never overflow their container */
   transition: border-color 0.2s;
 }
 
@@ -683,7 +735,7 @@ body {
 
 .modal {
   width: 500px;
-  max-width: 90vw;
+  max-width: 92vw;
   background: var(--bg-sidebar);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -691,6 +743,8 @@ body {
   display: flex;
   flex-direction: column;
   padding: 32px;
+  box-sizing: border-box;
+  overflow-x: hidden;
   transform: translateY(-20px);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -727,7 +781,11 @@ body {
   gap: 16px;
   max-height: 60vh;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 4px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .modal-footer {

@@ -416,14 +416,14 @@ export default function CRMHome() {
           process: item.process || null,
           tipe_proses: item.tipe_proses || null,
           qty: qty || null,
-          cast_price: item.cast_price ? parseFloat(item.cast_price) : null,
-          mach_price: item.mach_price ? parseFloat(item.mach_price) : null,
-          surface_treatment: item.surface_treatment ? parseFloat(item.surface_treatment) : null,
-          packing_cost: item.packing_cost ? parseFloat(item.packing_cost) : null,
-          cfr: item.cfr ? parseFloat(item.cfr) : null,
+          cast_price: (item.cast_price !== '' && item.cast_price !== null) ? parseFloat(item.cast_price) : null,
+          mach_price: (item.mach_price !== '' && item.mach_price !== null) ? parseFloat(item.mach_price) : null,
+          surface_treatment: (item.surface_treatment !== '' && item.surface_treatment !== null) ? parseFloat(item.surface_treatment) : null,
+          packing_cost: (item.packing_cost !== '' && item.packing_cost !== null) ? parseFloat(item.packing_cost) : null,
+          cfr: (item.cfr !== '' && item.cfr !== null) ? parseFloat(item.cfr) : null,
           total_price_per_qty: totalPricePerQty || null,
           total_price: totalPrice || null,
-          tooling_cost: item.tooling_cost ? parseFloat(item.tooling_cost) : null,
+          tooling_cost: (item.tooling_cost !== '' && item.tooling_cost !== null) ? parseFloat(item.tooling_cost) : null,
           status: 'Pending Quotation'
         };
       });
@@ -518,21 +518,21 @@ export default function CRMHome() {
           const totalPrice = totalPricePerQty * qty;
 
           return {
-            id: item.id || undefined, // let database generate UUID if new
+            id: item.id || undefined,
             inquiry_id: selectedInquiry.id,
             item_name: item.item_name || 'Unnamed Item',
             material: item.material || null,
             process: item.process || null,
             tipe_proses: item.tipe_proses || null,
             qty: qty || null,
-            cast_price: item.cast_price ? parseFloat(item.cast_price) : null,
-            mach_price: item.mach_price ? parseFloat(item.mach_price) : null,
-            surface_treatment: item.surface_treatment ? parseFloat(item.surface_treatment) : null,
-            packing_cost: item.packing_cost ? parseFloat(item.packing_cost) : null,
-            cfr: item.cfr ? parseFloat(item.cfr) : null,
+            cast_price: (item.cast_price !== '' && item.cast_price !== null) ? parseFloat(item.cast_price) : null,
+            mach_price: (item.mach_price !== '' && item.mach_price !== null) ? parseFloat(item.mach_price) : null,
+            surface_treatment: (item.surface_treatment !== '' && item.surface_treatment !== null) ? parseFloat(item.surface_treatment) : null,
+            packing_cost: (item.packing_cost !== '' && item.packing_cost !== null) ? parseFloat(item.packing_cost) : null,
+            cfr: (item.cfr !== '' && item.cfr !== null) ? parseFloat(item.cfr) : null,
             total_price_per_qty: totalPricePerQty || null,
             total_price: totalPrice || null,
-            tooling_cost: item.tooling_cost ? parseFloat(item.tooling_cost) : null,
+            tooling_cost: (item.tooling_cost !== '' && item.tooling_cost !== null) ? parseFloat(item.tooling_cost) : null,
             // Sync Status and FAI checklist columns:
             status: item.status || 'Pending Quotation',
             fai_status: item.fai_status || 'Pending',
@@ -1541,7 +1541,7 @@ export default function CRMHome() {
                                 className="form-input" 
                                 style={{ padding: '8px' }}
                                 placeholder="0.00" 
-                                value={item.tooling_cost || ''}
+                                value={item.tooling_cost ?? ''}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
                                   updated[index].tooling_cost = e.target.value;
@@ -1559,7 +1559,7 @@ export default function CRMHome() {
                                 className="form-input" 
                                 style={{ padding: '6px', fontSize: '12px' }}
                                 placeholder="0" 
-                                value={item.cast_price || ''}
+                                value={item.cast_price ?? ''}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
                                   updated[index].cast_price = e.target.value;
@@ -1574,7 +1574,7 @@ export default function CRMHome() {
                                 className="form-input" 
                                 style={{ padding: '6px', fontSize: '12px' }}
                                 placeholder="0" 
-                                value={item.mach_price || ''}
+                                value={item.mach_price ?? ''}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
                                   updated[index].mach_price = e.target.value;
@@ -1589,7 +1589,7 @@ export default function CRMHome() {
                                 className="form-input" 
                                 style={{ padding: '6px', fontSize: '12px' }}
                                 placeholder="0" 
-                                value={item.surface_treatment || ''}
+                                value={item.surface_treatment ?? ''}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
                                   updated[index].surface_treatment = e.target.value;
@@ -1604,7 +1604,7 @@ export default function CRMHome() {
                                 className="form-input" 
                                 style={{ padding: '6px', fontSize: '12px' }}
                                 placeholder="0" 
-                                value={item.packing_cost || ''}
+                                value={item.packing_cost ?? ''}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
                                   updated[index].packing_cost = e.target.value;
@@ -1619,7 +1619,7 @@ export default function CRMHome() {
                                 className="form-input" 
                                 style={{ padding: '6px', fontSize: '12px' }}
                                 placeholder="0" 
-                                value={item.cfr || ''}
+                                value={item.cfr ?? ''}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
                                   updated[index].cfr = e.target.value;
