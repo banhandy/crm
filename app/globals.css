@@ -99,6 +99,20 @@ body {
   justify-content: space-between;
   padding: 24px 16px;
   flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  padding: 24px 12px;
+}
+
+.sidebar.collapsed .logo-section {
+  border-bottom: none;
+}
+
+.sidebar.collapsed .theme-toggle-btn {
+  border-color: transparent;
 }
 
 .logo-section {
@@ -527,7 +541,9 @@ body {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 480px;
+  width: 66vw;
+  max-width: 950px;
+  min-width: 500px;
   background: var(--bg-sidebar);
   border-left: 1px solid var(--border-color);
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
@@ -709,4 +725,34 @@ body {
   border-top: 1px solid var(--border-color);
   display: flex;
   gap: 12px;
+}
+
+/* Glassmorphic Item Count Badge */
+.item-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.item-count-badge:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Partially Won Premium Gradient Badge */
+.badge-partial-won {
+  background: linear-gradient(135deg, var(--color-accent-glow), rgba(16, 185, 129, 0.15)) !important;
+  color: var(--text-main) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
+  font-weight: 600;
 }
