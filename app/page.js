@@ -96,6 +96,7 @@ export default function CRMHome() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'inquiries', 'customers'
   const [theme, setTheme] = useState('dark');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Database States
   const [inquiries, setInquiries] = useState([]);
@@ -672,7 +673,13 @@ export default function CRMHome() {
   return (
     <div className="app-container">
       {/* 1. SIDEBAR NAVIGATION */}
-      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+      {mobileSidebarOpen && (
+        <div 
+          className="sidebar-backdrop mobile-open" 
+          onClick={() => setMobileSidebarOpen(false)} 
+        />
+      )}
+      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
         <div>
           <div className="logo-section" style={{ display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'space-between', alignItems: 'center', padding: sidebarCollapsed ? '0 0 20px 0' : '0 12px 24px 12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: sidebarCollapsed ? 'auto' : '100%' }}>
@@ -706,7 +713,7 @@ export default function CRMHome() {
           <nav className="nav-links" style={{ gap: '12px' }}>
             <div 
               className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => { setActiveTab('dashboard'); setMobileSidebarOpen(false); }}
               title={sidebarCollapsed ? "Dashboard" : ""}
               style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
             >
@@ -715,7 +722,7 @@ export default function CRMHome() {
             </div>
             <div 
               className={`nav-link ${activeTab === 'inquiries' ? 'active' : ''}`}
-              onClick={() => setActiveTab('inquiries')}
+              onClick={() => { setActiveTab('inquiries'); setMobileSidebarOpen(false); }}
               title={sidebarCollapsed ? "Inquiries Pipeline" : ""}
               style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
             >
@@ -724,7 +731,7 @@ export default function CRMHome() {
             </div>
             <div 
               className={`nav-link ${activeTab === 'customers' ? 'active' : ''}`}
-              onClick={() => setActiveTab('customers')}
+              onClick={() => { setActiveTab('customers'); setMobileSidebarOpen(false); }}
               title={sidebarCollapsed ? "Customer Contact" : ""}
               style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
             >
@@ -776,11 +783,30 @@ export default function CRMHome() {
       {/* 2. MAIN WORKSPACE VIEW */}
       <main className="main-content">
         <header className="top-bar">
-          <h1 className="page-title">
-            {activeTab === 'dashboard' && '📊 Dashboard Analytics'}
-            {activeTab === 'inquiries' && '📁 Inquiries Pipeline'}
-            {activeTab === 'customers' && '👥 Customer Directory'}
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button 
+              className="mobile-hamburger-btn" 
+              onClick={() => setMobileSidebarOpen(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-main)',
+                cursor: 'pointer',
+                display: 'none',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px',
+                borderRadius: '6px'
+              }}
+            >
+              <Menu size={20} />
+            </button>
+            <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {activeTab === 'dashboard' && '📊 Dashboard Analytics'}
+              {activeTab === 'inquiries' && '📁 Inquiries Pipeline'}
+              {activeTab === 'customers' && '👥 Customer Directory'}
+            </h1>
+          </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             {activeTab === 'customers' && (
               <button className="action-btn" onClick={() => setIsAddCustomerOpen(true)}>

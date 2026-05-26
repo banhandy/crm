@@ -913,3 +913,125 @@ body {
   border-radius: 20px;
   border: 1px solid var(--border-color);
 }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN & PADDING STYLES (Mobile-first adaptivity)
+   ========================================================================== */
+
+/* Mobile Hamburger Button default state */
+.mobile-hamburger-btn {
+  display: none !important;
+}
+
+/* 1. Large Tablet / Medium Viewport Adaptations */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .fai-gantt-row-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .fai-gantt-dates {
+    align-items: flex-start;
+  }
+
+  .fai-timeline-track {
+    margin: 20px 0;
+  }
+}
+
+/* 2. Small Tablet / Mobile Portrait Adaptations */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .mobile-hamburger-btn {
+    display: flex !important;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 260px;
+    height: 100vh;
+    z-index: 1001;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar.mobile-open {
+    left: 0;
+    box-shadow: 5px 0 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1000;
+  }
+
+  /* Compact padding for main shell body */
+  .content-body {
+    padding: 16px;
+    gap: 20px;
+  }
+
+  .top-bar {
+    padding: 0 16px;
+  }
+
+  /* Drawer adaptions for mobile screens */
+  .drawer {
+    width: 100vw;
+    min-width: 0;
+    max-width: none;
+    padding: 20px;
+  }
+
+  .drawer-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .drawer-footer button {
+    flex-grow: 1;
+  }
+}
+
+/* 3. Small Mobile Viewport Adaptations */
+@media (max-width: 576px) {
+  .pipeline-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar {
+    max-width: none;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .fai-milestone-label {
+    font-size: 9px;
+  }
+}
