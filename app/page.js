@@ -422,7 +422,8 @@ export default function CRMHome() {
           cfr: item.cfr ? parseFloat(item.cfr) : null,
           total_price_per_qty: totalPricePerQty || null,
           total_price: totalPrice || null,
-          tooling_cost: item.tooling_cost ? parseFloat(item.tooling_cost) : null
+          tooling_cost: item.tooling_cost ? parseFloat(item.tooling_cost) : null,
+          status: 'Pending Quotation'
         };
       });
 
@@ -530,7 +531,16 @@ export default function CRMHome() {
             cfr: item.cfr ? parseFloat(item.cfr) : null,
             total_price_per_qty: totalPricePerQty || null,
             total_price: totalPrice || null,
-            tooling_cost: item.tooling_cost ? parseFloat(item.tooling_cost) : null
+            tooling_cost: item.tooling_cost ? parseFloat(item.tooling_cost) : null,
+            // Sync Status and FAI checklist columns:
+            status: item.status || 'Pending Quotation',
+            fai_status: item.fai_status || 'Pending',
+            fai_engineer: item.fai_engineer || null,
+            fai_dimensions: item.fai_dimensions || 'Pending',
+            fai_material_cert: item.fai_material_cert || 'Pending',
+            fai_test_report: item.fai_test_report || 'Pending',
+            fai_remarks: item.fai_remarks || null,
+            fai_date: item.fai_date || null
           };
         });
 
@@ -1275,7 +1285,7 @@ export default function CRMHome() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                         <div className="form-group">
                           <label className="form-label" style={{ fontSize: '11px' }}>Material</label>
                           <input 
@@ -1303,6 +1313,25 @@ export default function CRMHome() {
                               setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
                             }}
                           />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-accent)', fontWeight: '600' }}>Item Status</label>
+                          <select 
+                            className="form-select"
+                            style={{ padding: '8px' }}
+                            value={item.status || 'Pending Quotation'}
+                            onChange={e => {
+                              const updated = [...selectedInquiry.inquiry_items];
+                              updated[index].status = e.target.value;
+                              setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                            }}
+                          >
+                            <option value="Pending Quotation">Pending Quotation</option>
+                            <option value="Submitted">Submitted</option>
+                            <option value="Follow Up">Follow Up</option>
+                            <option value="PO Won">PO Won</option>
+                            <option value="Canceled">Canceled</option>
+                          </select>
                         </div>
                       </div>
 
