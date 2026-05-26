@@ -27,6 +27,28 @@ import {
   LogOut
 } from 'lucide-react';
 
+// Helper to calculate working days (excluding weekends) between two dates
+const calculateWorkingDays = (startDateStr, endDateStr) => {
+  if (!startDateStr || !endDateStr) return '';
+  const startDate = new Date(startDateStr);
+  const endDate = new Date(endDateStr);
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return '';
+  if (startDate > endDate) return 0;
+  
+  let count = 0;
+  let curDate = new Date(startDate.getTime());
+  // Advance by 1 day to measure gap (similar to excel lead time days calculation)
+  curDate.setDate(curDate.getDate() + 1);
+  while (curDate <= endDate) {
+    const dayOfWeek = curDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sun (0) and Sat (6)
+      count++;
+    }
+    curDate.setDate(curDate.getDate() + 1);
+  }
+  return count;
+};
+
 export default function CRMHome() {
   // Authentication States
   const [session, setSession] = useState(null);
@@ -316,6 +338,8 @@ export default function CRMHome() {
     e.preventDefault();
     try {
       const payload = {
+        category: selectedInquiry.category,
+        quotation_date: selectedInquiry.quotation_date || null,
         quotation_number: selectedInquiry.quotation_number || null,
         lead_time_days: selectedInquiry.lead_time_days ? parseInt(selectedInquiry.lead_time_days) : null,
         po_number: selectedInquiry.po_number || null,
@@ -932,17 +956,29 @@ export default function CRMHome() {
 
             <div className="form-group">
               <label className="form-label">Category Type</label>
+              <select 
+                className="form-select"
+                value={selectedInquiry.category}
+                onChange={e => setSelectedInquiry({ ...selectedInquiry, category: e.target.value })}
+              >
+                <option value="standard">STANDARD</option>
+                <option value="tvb">TVB</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Inquiry Date</label>
               <input 
-                type="text" 
+                type="date" 
                 className="form-input" 
-                value={selectedInquiry.category.toUpperCase()}
+                value={selectedInquiry.inquiry_date || ''}
                 disabled 
                 style={{ opacity: 0.6, cursor: 'not-allowed' }}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label" style={{ color: 'var(--color-pending)', display: 'flex', justifyCentent: 'space-between' }}>
+              <label className="form-label" style={{ color: 'var(--color-pending)', display: 'flex', justifyContent: 'space-between' }}>
                 Quotation Number 
                 {!selectedInquiry.quotation_number && <span style={{ fontSize: '11px', fontWeight: 'normal' }}>⚠️ Missing input</span>}
               </label>
@@ -956,11 +992,29 @@ export default function CRMHome() {
             </div>
 
             <div className="form-group">
+              <label className="form-label">Quotation Date</label>
+              <input 
+                type="date" 
+                className="form-input" 
+                value={selectedInquiry.quotation_date || ''}
+                onChange={e => {
+                  const qDate = e.target.value;
+                  const calculatedLead = calculateWorkingDays(selectedInquiry.inquiry_date, qDate);
+                  setSelectedInquiry({ 
+                    ...selectedInquiry, 
+                    quotation_date: qDate,
+                    lead_time_days: calculatedLead
+                  });
+                }}
+              />
+            </div>
+
+            <div className="form-group">
               <label className="form-label">Lead Time (Working Days)</label>
               <input 
                 type="number" 
                 className="form-input" 
-                placeholder="Number of days" 
+                placeholder="Calculated automatically or custom input" 
                 value={selectedInquiry.lead_time_days || ''}
                 onChange={e => setSelectedInquiry({ ...selectedInquiry, lead_time_days: e.target.value })}
               />
