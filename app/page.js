@@ -780,7 +780,6 @@ export default function CRMHome() {
         </div>
       </aside>
 
-      {/* 2. MAIN WORKSPACE VIEW */}
       <main className="main-content">
         <header className="top-bar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1054,7 +1053,7 @@ export default function CRMHome() {
 
                           return (
                             <div key={idx} className="glass-panel section-card glass-panel-hover" style={{ cursor: 'pointer', padding: '20px', transition: 'all 0.2s ease', border: '1px solid var(--border-color)' }} onClick={() => openInquiryDrawer(item.inqRef)}>
-                              <div className="fai-gantt-row-container" style={{ display: 'grid', gridTemplateColumns: '250px 1fr 200px', alignItems: 'center', gap: '20px' }}>
+                            <div className="fai-gantt-row-container" style={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 250px) 1fr minmax(160px, 200px)', alignItems: 'center', gap: '20px' }}>
                                 <div className="fai-gantt-info">
                                   <span className="fai-gantt-customer">{item.customerName}</span>
                                   <span className="fai-gantt-item">{item.item_name}</span>

@@ -226,15 +226,19 @@ body {
   flex-direction: column;
   overflow: hidden;
   height: 100vh;
+  min-width: 0; /* Critical: allow flex child to shrink below content size */
 }
 
 .top-bar {
-  height: 72px; /* Increased from 64px for premium breathing room */
+  height: 72px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px !important; /* Enforce desktop padding */
+  padding: 0 32px;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
   background: var(--bg-sidebar);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -253,11 +257,14 @@ body {
 
 .content-body {
   flex-grow: 1;
-  padding: 32px !important; /* Enforce desktop padding */
+  padding: 32px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 32px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* KPI Ribbon styling */
@@ -975,14 +982,14 @@ body {
 
   /* Compact padding for main shell body */
   .content-body {
-    padding: 16px !important; /* Enforce mobile padding */
-    gap: 20px !important;
+    padding: 16px;
+    gap: 20px;
   }
 
   .top-bar {
-    height: auto !important;
-    min-height: 60px !important;
-    padding: 12px 16px !important; /* Dynamic padding with plenty of breathing room */
+    height: auto;
+    min-height: 60px;
+    padding: 12px 16px;
   }
 
   .top-bar .page-title {
