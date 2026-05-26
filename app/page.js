@@ -135,7 +135,8 @@ export default function CRMHome() {
     quotation_number: '',
     lead_time_days: '',
     remark: '',
-    status: 'Pending Quotation'
+    status: 'Pending Quotation',
+    currency: 'USD'
   });
 
   // Form states for new customer
@@ -384,6 +385,7 @@ export default function CRMHome() {
         lead_time_days: newInquiry.lead_time_days ? parseInt(newInquiry.lead_time_days) : null,
         remark: newInquiry.remark || '',
         status: newInquiry.status,
+        currency: newInquiry.currency || 'USD',
         last_activity_at: new Date().toISOString()
       };
       
@@ -453,7 +455,8 @@ export default function CRMHome() {
         quotation_number: '',
         lead_time_days: '',
         remark: '',
-        status: 'Pending Quotation'
+        status: 'Pending Quotation',
+        currency: 'USD'
       });
       setIsAddInquiryOpen(false);
       fetchData();
@@ -476,6 +479,7 @@ export default function CRMHome() {
         order_review: selectedInquiry.order_review || null,
         remark: selectedInquiry.remark || '',
         status: selectedInquiry.status,
+        currency: selectedInquiry.currency || 'USD',
         last_activity_at: new Date().toISOString()
       };
 
@@ -1893,6 +1897,37 @@ export default function CRMHome() {
             </div>
 
             <div className="form-group">
+              <label className="form-label">Currency</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                {[{ value: 'USD', label: '🇺🇸 USD', sub: 'US Dollar' }, { value: 'IDR', label: '🇮🇩 IDR', sub: 'Rupiah' }, { value: 'EUR', label: '🇪🇺 EUR', sub: 'Euro' }].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setSelectedInquiry({ ...selectedInquiry, currency: opt.value })}
+                    style={{
+                      padding: '10px 8px',
+                      borderRadius: '8px',
+                      border: `2px solid ${(selectedInquiry.currency || 'USD') === opt.value ? 'var(--color-accent)' : 'var(--border-color)'}`,
+                      background: (selectedInquiry.currency || 'USD') === opt.value ? 'rgba(139,92,246,0.12)' : 'var(--input-bg)',
+                      color: (selectedInquiry.currency || 'USD') === opt.value ? 'var(--color-accent)' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {opt.label}
+                    <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.7 }}>{opt.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-group">
               <label className="form-label">Quotation Date</label>
               <input 
                 type="date" 
@@ -2318,6 +2353,37 @@ export default function CRMHome() {
                 value={newInquiry.quotation_number}
                 onChange={e => setNewInquiry({ ...newInquiry, quotation_number: e.target.value })}
               />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Currency</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                {[{ value: 'USD', label: '🇺🇸 USD', sub: 'US Dollar' }, { value: 'IDR', label: '🇮🇩 IDR', sub: 'Rupiah' }, { value: 'EUR', label: '🇪🇺 EUR', sub: 'Euro' }].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setNewInquiry({ ...newInquiry, currency: opt.value })}
+                    style={{
+                      padding: '10px 8px',
+                      borderRadius: '8px',
+                      border: `2px solid ${(newInquiry.currency || 'USD') === opt.value ? 'var(--color-accent)' : 'var(--border-color)'}`,
+                      background: (newInquiry.currency || 'USD') === opt.value ? 'rgba(139,92,246,0.12)' : 'var(--input-bg)',
+                      color: (newInquiry.currency || 'USD') === opt.value ? 'var(--color-accent)' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {opt.label}
+                    <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.7 }}>{opt.sub}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="form-group">
