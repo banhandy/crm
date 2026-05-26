@@ -1052,64 +1052,96 @@ export default function CRMHome() {
                           const testStatus = item.fai_test_report || 'Pending';
 
                           return (
-                            <div key={idx} className="glass-panel section-card glass-panel-hover" style={{ cursor: 'pointer', padding: '20px', transition: 'all 0.2s ease', border: '1px solid var(--border-color)' }} onClick={() => openInquiryDrawer(item.inqRef)}>
-                            <div className="fai-gantt-row-container" style={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 250px) 1fr minmax(160px, 200px)', alignItems: 'center', gap: '20px' }}>
-                                <div className="fai-gantt-info">
+                            <div
+                              key={idx}
+                              className="glass-panel glass-panel-hover"
+                              style={{ cursor: 'pointer', padding: '20px', transition: 'all 0.2s ease', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
+                              onClick={() => openInquiryDrawer(item.inqRef)}
+                            >
+                              {/* ── Row 1: Header — identity + status badge ── */}
+                              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                                   <span className="fai-gantt-customer">{item.customerName}</span>
-                                  <span className="fai-gantt-item">{item.item_name}</span>
+                                  <span className="fai-gantt-item" style={{ fontSize: '15px' }}>{item.item_name}</span>
                                   <span className="fai-gantt-engineer">
                                     👷 Engineer: <strong style={{ color: 'var(--text-main)' }}>{item.fai_engineer || 'Unassigned'}</strong>
                                   </span>
                                 </div>
+                                <span
+                                  className="fai-gantt-status-badge"
+                                  style={{
+                                    flexShrink: 0,
+                                    padding: '4px 12px',
+                                    borderRadius: '20px',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    background: item.fai_status === 'Approved' ? 'rgba(16,185,129,0.12)' : item.fai_status === 'Rejected' ? 'rgba(239,68,68,0.12)' : item.fai_status === 'In Progress' ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.04)',
+                                    color: item.fai_status === 'Approved' ? 'var(--color-won)' : item.fai_status === 'Rejected' ? 'var(--color-stale)' : item.fai_status === 'In Progress' ? 'var(--color-follow)' : 'var(--text-muted)',
+                                    border: `1px solid ${item.fai_status === 'Approved' ? 'rgba(16,185,129,0.25)' : item.fai_status === 'Rejected' ? 'rgba(239,68,68,0.25)' : item.fai_status === 'In Progress' ? 'rgba(245,158,11,0.25)' : 'var(--border-color)'}`,
+                                  }}
+                                >
+                                  {item.fai_status === 'Approved' ? '✓ Qualified' : item.fai_status === 'In Progress' ? '⚙ Trial Run' : item.fai_status === 'Rejected' ? '✗ Rejected' : '◎ Pending'}
+                                </span>
+                              </div>
 
-                                <div className="fai-timeline-track">
-                                  {/* Visual Progress Bar */}
-                                  <div 
-                                    className={`fai-timeline-bar ${item.fai_status === 'Approved' ? 'won' : 'progress'}`}
-                                    style={{ width: `${progress}%` }}
-                                  />
-                                  
-                                  {/* Milestone 1: Dimensions */}
-                                  <div className={`fai-milestone ${dimStatus === 'Passed' ? 'passed' : dimStatus === 'Failed' ? 'failed' : 'pending'}`}>
-                                    <span className="fai-milestone-label">📐 Dimensions</span>
-                                  </div>
-
-                                  {/* Milestone 2: Material Cert */}
-                                  <div className={`fai-milestone ${matStatus === 'Passed' ? 'passed' : matStatus === 'Failed' ? 'failed' : 'pending'}`}>
-                                    <span className="fai-milestone-label">📄 Material Cert</span>
-                                  </div>
-
-                                  {/* Milestone 3: Testing */}
-                                  <div className={`fai-milestone ${testStatus === 'Passed' ? 'passed' : testStatus === 'Failed' ? 'failed' : 'pending'}`}>
-                                    <span className="fai-milestone-label">🔬 Test Report</span>
-                                  </div>
+                              {/* ── Row 2: Progress bar ── */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
+                                  <span>FAI Progress</span>
+                                  <span style={{ fontWeight: '600', color: progress === 100 ? 'var(--color-won)' : 'var(--color-follow)' }}>{progress}%</span>
                                 </div>
+                                <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden', width: '100%' }}>
+                                  <div style={{
+                                    height: '100%',
+                                    width: `${progress}%`,
+                                    borderRadius: '4px',
+                                    background: progress === 100 ? 'linear-gradient(90deg, var(--color-accent), var(--color-won))' : 'linear-gradient(90deg, var(--color-accent), var(--color-follow))',
+                                    transition: 'width 0.4s ease'
+                                  }} />
+                                </div>
+                              </div>
 
-                                <div className="fai-gantt-dates">
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '11px', color: 'var(--text-muted)' }}>
-                                    <span>Ordered:</span>
-                                    <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>
-                                      {item.inquiryDate ? new Date(item.inquiryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
-                                    </span>
-                                  </div>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '11px', color: 'var(--text-muted)' }}>
-                                    <span>Sign-off Target:</span>
-                                    <span style={{ fontWeight: '600', color: 'var(--color-accent)' }}>
-                                      {item.fai_date ? new Date(item.fai_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
-                                    </span>
-                                  </div>
-                                  <div style={{ marginTop: '4px' }}>
-                                    <span 
-                                      className="fai-gantt-status-badge" 
-                                      style={{
-                                        background: item.fai_status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : item.fai_status === 'Rejected' ? 'rgba(239, 68, 68, 0.1)' : item.fai_status === 'In Progress' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(255,255,255,0.03)',
-                                        color: item.fai_status === 'Approved' ? 'var(--color-won)' : item.fai_status === 'Rejected' ? 'var(--color-stale)' : item.fai_status === 'In Progress' ? 'var(--color-follow)' : 'var(--text-muted)',
-                                        borderColor: item.fai_status === 'Approved' ? 'rgba(16, 185, 129, 0.2)' : item.fai_status === 'Rejected' ? 'rgba(239, 68, 68, 0.2)' : item.fai_status === 'In Progress' ? 'rgba(245, 158, 11, 0.2)' : 'var(--border-color)'
-                                      }}
-                                    >
-                                      {item.fai_status === 'Approved' ? 'Qualified' : item.fai_status === 'In Progress' ? 'Trial Run' : item.fai_status || 'Pending'}
-                                    </span>
-                                  </div>
+                              {/* ── Row 3: Milestone chips ── */}
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                {[
+                                  { label: '📐 Dimensions', status: dimStatus },
+                                  { label: '📄 Material Cert', status: matStatus },
+                                  { label: '🔬 Test Report', status: testStatus },
+                                ].map(({ label, status }) => (
+                                  <span
+                                    key={label}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '5px',
+                                      padding: '4px 10px',
+                                      borderRadius: '20px',
+                                      fontSize: '12px',
+                                      fontWeight: '600',
+                                      border: `1px solid ${status === 'Passed' ? 'rgba(16,185,129,0.3)' : status === 'Failed' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                                      background: status === 'Passed' ? 'rgba(16,185,129,0.1)' : status === 'Failed' ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.03)',
+                                      color: status === 'Passed' ? 'var(--color-won)' : status === 'Failed' ? 'var(--color-stale)' : 'var(--text-muted)',
+                                    }}
+                                  >
+                                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: status === 'Passed' ? 'var(--color-won)' : status === 'Failed' ? 'var(--color-stale)' : 'var(--border-color)', flexShrink: 0, display: 'inline-block' }} />
+                                    {label}
+                                  </span>
+                                ))}
+                              </div>
+
+                              {/* ── Row 4: Date footer ── */}
+                              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid var(--border-color)', paddingTop: '12px', fontSize: '11px' }}>
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                  <span style={{ color: 'var(--text-muted)' }}>Ordered:</span>
+                                  <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                                    {item.inquiryDate ? new Date(item.inquiryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                                  </span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                  <span style={{ color: 'var(--text-muted)' }}>Sign-off Target:</span>
+                                  <span style={{ fontWeight: '600', color: item.fai_date ? 'var(--color-accent)' : 'var(--text-muted)' }}>
+                                    {item.fai_date ? new Date(item.fai_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
+                                  </span>
                                 </div>
                               </div>
                             </div>
