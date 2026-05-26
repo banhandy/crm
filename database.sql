@@ -149,5 +149,26 @@ INSERT INTO public.pic_members (name) VALUES
     ('RANU');
 
 -- ====================================================
+-- 10. MIGRATIONS (Updates applied to live database)
+-- ====================================================
+-- Run the following script in the Supabase SQL Editor
+-- to add status and FAI columns to inquiry_items:
+ALTER TABLE public.inquiry_items 
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Pending Quotation',
+ADD COLUMN IF NOT EXISTS fai_status TEXT DEFAULT 'Pending',
+ADD COLUMN IF NOT EXISTS fai_engineer TEXT,
+ADD COLUMN IF NOT EXISTS fai_dimensions TEXT DEFAULT 'Pending',
+ADD COLUMN IF NOT EXISTS fai_material_cert TEXT DEFAULT 'Pending',
+ADD COLUMN IF NOT EXISTS fai_test_report TEXT DEFAULT 'Pending',
+ADD COLUMN IF NOT EXISTS fai_remarks TEXT,
+ADD COLUMN IF NOT EXISTS fai_date DATE;
+
+-- Populate status of existing items based on their parent Inquiry status
+UPDATE public.inquiry_items item
+SET status = inq.status
+FROM public.inquiries inq
+WHERE item.inquiry_id = inq.id AND (item.status IS NULL OR item.status = 'Pending Quotation');
+
+-- ====================================================
 -- Done! Run migrate.js next to import Excel data.
 -- ====================================================
