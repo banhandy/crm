@@ -234,7 +234,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
+  padding: 0 32px !important; /* Enforce desktop padding */
   background: var(--bg-sidebar);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -253,7 +253,7 @@ body {
 
 .content-body {
   flex-grow: 1;
-  padding: 32px;
+  padding: 32px !important; /* Enforce desktop padding */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -975,21 +975,33 @@ body {
 
   /* Compact padding for main shell body */
   .content-body {
-    padding: 16px;
-    gap: 20px;
+    padding: 16px !important; /* Enforce mobile padding */
+    gap: 20px !important;
   }
 
   .top-bar {
-    height: 60px;
-    padding: 0 16px;
+    height: auto !important;
+    min-height: 60px !important;
+    padding: 12px 16px !important; /* Dynamic padding with plenty of breathing room */
+  }
+
+  .top-bar .page-title {
+    font-size: 15px !important; /* Compact font size to prevent header wrapping on narrow views */
+    gap: 6px !important;
+  }
+
+  .top-bar .action-btn {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
   }
 
   /* Drawer adaptions for mobile screens */
   .drawer {
-    width: 100vw;
-    min-width: 0;
-    max-width: none;
-    padding: 20px;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 16px !important;
   }
 
   .drawer-footer {
@@ -999,6 +1011,78 @@ body {
 
   .drawer-footer button {
     flex-grow: 1;
+  }
+
+  /* FAI Gantt Timeline vertical stacking stepper on mobile */
+  .fai-timeline-track {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    height: auto !important;
+    background: none !important;
+    border-left: 2px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 4px 0 4px 16px !important;
+    margin: 16px 8px 16px 12px !important;
+    gap: 20px !important;
+  }
+
+  .fai-timeline-bar {
+    display: none !important; /* Hide horizontal progress bar */
+  }
+
+  .fai-milestone {
+    display: flex !important;
+    align-items: center !important;
+    width: auto !important;
+    height: auto !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    position: relative !important;
+  }
+
+  .fai-milestone::before {
+    content: '' !important;
+    display: block !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    background: var(--bg-sidebar) !important;
+    border: 2px solid var(--border-color) !important;
+    margin-left: -23px !important; /* Center directly on border-left track */
+    margin-right: 12px !important;
+    z-index: 2 !important;
+    transition: all 0.3s ease !important;
+    flex-shrink: 0 !important;
+  }
+
+  .fai-milestone.passed::before {
+    background: var(--color-won) !important;
+    border-color: var(--color-won) !important;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4) !important;
+  }
+
+  .fai-milestone.pending::before {
+    background: var(--bg-sidebar) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .fai-milestone.failed::before {
+    background: var(--color-stale) !important;
+    border-color: var(--color-stale) !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4) !important;
+  }
+
+  .fai-milestone-label {
+    position: static !important;
+    transform: none !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: var(--text-muted) !important;
+    white-space: nowrap !important;
+  }
+
+  .fai-milestone.passed .fai-milestone-label {
+    color: var(--text-main) !important;
   }
 }
 
