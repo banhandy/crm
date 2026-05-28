@@ -51,6 +51,18 @@ const calculateWorkingDays = (startDateStr, endDateStr) => {
   return count;
 };
 
+// Helper to calculate days open (Today - InquiryDate)
+const getDaysOpen = (inquiryDateStr) => {
+  if (!inquiryDateStr) return 0;
+  const start = new Date(inquiryDateStr);
+  start.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffTime = today - start;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays < 0 ? 0 : diffDays;
+};
+
 // Helper to calculate total value of an inquiry (items total + tooling costs)
 const getInquiryTotal = (inq) => {
   const currencySym = inq.currency === 'EUR' ? '€' : inq.currency === 'IDR' ? 'Rp' : '$';
@@ -113,6 +125,7 @@ export default function CRMHome() {
   // Sorting States
   const [sortField, setSortField] = useState('inquiry_date');
   const [sortDirection, setSortDirection] = useState('desc');
+  const [showOnlyPendingQuotes, setShowOnlyPendingQuotes] = useState(false);
 
   // Helper to get dynamic inquiry total as a number for numerical sorting & aggregates
   const getInquiryTotalNumeric = (inq) => {
@@ -365,6 +378,10 @@ export default function CRMHome() {
 
   // Filtering Logic for Inquiries Table
   const filteredInquiries = inquiries.filter(inq => {
+    if (showOnlyPendingQuotes) {
+      const isPending = !inq.quotation_number && inq.status !== 'Canceled';
+      if (!isPending) return false;
+    }
     const custName = inq.customers?.company_name || '';
     const qNo = inq.quotation_number || '';
     const picName = inq.customers?.pic_name || '';
@@ -1022,7 +1039,16 @@ export default function CRMHome() {
               <div className="kpi-indicator" style={{ background: 'var(--color-accent)' }}></div>
             </div>
 
-            <div className="glass-panel kpi-card">
+            <div 
+              className={`glass-panel kpi-card kpi-clickable-card ${showOnlyPendingQuotes ? 'active-filter' : ''}`}
+              onClick={() => {
+                setShowOnlyPendingQuotes(prev => !prev);
+                if (activeTab !== 'inquiries') {
+                  setActiveTab('inquiries');
+                }
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               <span className="kpi-title">Pending Quotation</span>
               <div className="kpi-value" style={{ color: 'var(--color-pending)' }}>
                 {pendingQuotations}
@@ -1448,6 +1474,46 @@ export default function CRMHome() {
                     </div>
                   </div>
 
+                  {showOnlyPendingQuotes && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      border: '1px solid rgba(59, 130, 246, 0.25)',
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      color: '#60a5fa',
+                      fontWeight: '500',
+                      marginTop: '12px',
+                      marginBottom: '16px'
+                    }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        ⏱️ Showing only inquiries with <strong>Pending Quotations</strong> (Not canceled, no quotation # submitted yet).
+                      </span>
+                      <button 
+                        onClick={() => setShowOnlyPendingQuotes(false)} 
+                        style={{
+                          background: 'rgba(255,255,255,0.08)',
+                          border: 'none',
+                          color: '#fff',
+                          padding: '4px 10px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          marginLeft: 'auto',
+                          transition: 'all 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.2)'}
+                        onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.08)'}
+                      >
+                        Clear Filter
+                      </button>
+                    </div>
+                  )}
+
                   {/* DATA TABLE */}
                   {filteredInquiries.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
@@ -1493,7 +1559,20 @@ export default function CRMHome() {
                                 <td style={{ color: inq.quotation_number ? 'inherit' : 'var(--color-pending)', fontWeight: inq.quotation_number ? 'normal' : '600' }}>
                                   {inq.quotation_number || 'Waiting Input'}
                                 </td>
-                                <td>{inq.lead_time_days ? `${inq.lead_time_days} days` : '-'}</td>
+                                <td>
+                                  {!inq.quotation_number && inq.status !== 'Canceled' ? (
+                                    (() => {
+                                      const openDays = getDaysOpen(inq.inquiry_date);
+                                      return (
+                                        <span style={{ color: 'var(--color-follow)', fontWeight: '600', fontSize: '13px' }}>
+                                          ⏱️ {openDays} {openDays === 1 ? 'day' : 'days'} open
+                                        </span>
+                                      );
+                                    })()
+                                  ) : (
+                                    inq.lead_time_days ? `${inq.lead_time_days} days` : '-'
+                                  )}
+                                </td>
                                 <td style={{ fontWeight: '600', color: 'var(--color-won)' }}>{getInquiryTotal(inq)}</td>
                                 <td style={{ fontWeight: '500' }}>{inq.customers?.pic_name}</td>
                                 <td>

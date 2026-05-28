@@ -1297,3 +1297,23 @@ body {
   background: rgba(0, 0, 0, 0.04) !important;
 }
 
+/* Premium KPI Banner ribbon interactive cards */
+.kpi-clickable-card {
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.kpi-clickable-card:hover {
+  transform: translateY(-2px);
+  background: var(--bg-card-hover) !important;
+  border-color: var(--border-hover) !important;
+}
+
+.kpi-clickable-card.active-filter {
+  border-color: var(--color-pending) !important;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.15) !important;
+  background: rgba(59, 130, 246, 0.06) !important;
+}
+
+
