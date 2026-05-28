@@ -170,5 +170,23 @@ FROM public.inquiries inq
 WHERE item.inquiry_id = inq.id AND (item.status IS NULL OR item.status = 'Pending Quotation');
 
 -- ====================================================
+-- 11. DRAWING UPLOADS (item_drawings table)
+-- ====================================================
+-- Run in Supabase SQL Editor:
+CREATE TABLE IF NOT EXISTS public.item_drawings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  inquiry_item_id UUID REFERENCES public.inquiry_items(id) ON DELETE CASCADE NOT NULL,
+  file_name TEXT NOT NULL,
+  storage_path TEXT NOT NULL,
+  uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+CREATE INDEX idx_item_drawings_item_id ON public.item_drawings(inquiry_item_id);
+ALTER TABLE public.item_drawings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all item_drawings" ON public.item_drawings FOR ALL USING (true) WITH CHECK (true);
+-- Storage bucket: 'drawings' (private) — create in Supabase Dashboard
+-- Storage RLS (SQL Editor): CREATE POLICY "drawings_anon_all" ON storage.objects FOR ALL TO anon USING (bucket_id = 'drawings') WITH CHECK (bucket_id = 'drawings');
+-- Path convention: drawings/{inquiry_item_id}/{timestamp}_{filename}
+
+-- ====================================================
 -- Done! Run migrate.js next to import Excel data.
 -- ====================================================

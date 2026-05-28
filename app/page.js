@@ -115,6 +115,15 @@ export default function CRMHome() {
   const [isAddInquiryOpen, setIsAddInquiryOpen] = useState(false);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
 
+  // Drawing upload states
+  const [itemDrawings, setItemDrawings] = useState({});   // { [itemId]: DrawingRow[] }
+  const [drawingsLoading, setDrawingsLoading] = useState(false);
+
+  // PDF viewer states
+  const [viewerDrawing, setViewerDrawing] = useState(null);
+  const [viewerUrl, setViewerUrl]         = useState(null);
+  const [viewerLoading, setViewerLoading] = useState(false);
+
   // Form states for new inquiry
   const [newInquiry, setNewInquiry] = useState({
     customer_id: '',
@@ -572,6 +581,115 @@ export default function CRMHome() {
     }));
     setSelectedInquiry({ ...inq, inquiry_items: items });
     setIsDrawerOpen(true);
+    setItemDrawings({});
+    fetchDrawingsForItems(items);
+  };
+
+  // Fetch drawings for all items in the opened inquiry
+  const fetchDrawingsForItems = async (items) => {
+    const itemIds = items.map(i => i.id).filter(Boolean);
+    if (itemIds.length === 0) return;
+    setDrawingsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('item_drawings')
+        .select('*')
+        .in('inquiry_item_id', itemIds)
+        .order('uploaded_at', { ascending: true });
+      if (error) throw error;
+      const grouped = {};
+      (data || []).forEach(d => {
+        if (!grouped[d.inquiry_item_id]) grouped[d.inquiry_item_id] = [];
+        grouped[d.inquiry_item_id].push(d);
+      });
+      setItemDrawings(grouped);
+    } catch (err) {
+      console.error('Error fetching drawings:', err.message);
+    } finally {
+      setDrawingsLoading(false);
+    }
+  };
+
+  // Upload a PDF drawing to Supabase Storage + record in item_drawings
+  const handleDrawingUpload = async (itemId, file) => {
+    if (!file || file.type !== 'application/pdf') {
+      alert('Only PDF files are supported.');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      alert('File too large. Maximum 20 MB.');
+      return;
+    }
+    const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const storagePath = `${itemId}/${safeName}`;
+    try {
+      const { error: uploadErr } = await supabase.storage
+        .from('drawings')
+        .upload(storagePath, file, { contentType: 'application/pdf', upsert: false });
+      if (uploadErr) throw uploadErr;
+
+      const { data: row, error: dbErr } = await supabase
+        .from('item_drawings')
+        .insert([{ inquiry_item_id: itemId, file_name: file.name, storage_path: storagePath }])
+        .select()
+        .single();
+      if (dbErr) throw dbErr;
+
+      setItemDrawings(prev => ({
+        ...prev,
+        [itemId]: [...(prev[itemId] || []), row]
+      }));
+    } catch (err) {
+      alert('Upload failed: ' + err.message);
+    }
+  };
+
+  // Delete a drawing from Storage + remove from item_drawings table
+  const handleDrawingDelete = async (drawing, itemId) => {
+    if (!confirm(`Delete "${drawing.file_name}"?`)) return;
+    try {
+      const { error: storageErr } = await supabase.storage
+        .from('drawings')
+        .remove([drawing.storage_path]);
+      if (storageErr) throw storageErr;
+
+      const { error: dbErr } = await supabase
+        .from('item_drawings')
+        .delete()
+        .eq('id', drawing.id);
+      if (dbErr) throw dbErr;
+
+      setItemDrawings(prev => ({
+        ...prev,
+        [itemId]: (prev[itemId] || []).filter(d => d.id !== drawing.id)
+      }));
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  };
+
+  // Open full-screen PDF viewer with a 1-hour signed URL
+  const openDrawingViewer = async (drawing) => {
+    setViewerDrawing(drawing);
+    setViewerUrl(null);
+    setViewerLoading(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from('drawings')
+        .createSignedUrl(drawing.storage_path, 3600);
+      if (error) throw error;
+      setViewerUrl(data.signedUrl);
+    } catch (err) {
+      alert('Could not load drawing: ' + err.message);
+      setViewerDrawing(null);
+    } finally {
+      setViewerLoading(false);
+    }
+  };
+
+  const closeDrawingViewer = () => {
+    setViewerDrawing(null);
+    setViewerUrl(null);
   };
 
   // LOADING PORTAL (Session validation in progress)
@@ -1814,6 +1932,61 @@ export default function CRMHome() {
                           </div>
                         </div>
                       )}
+
+                      {/* ── Drawings Section (existing items only) ── */}
+                      {item.id && (
+                        <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '12px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-pending)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              📎 Drawings
+                              {(itemDrawings[item.id] || []).length > 0 && (
+                                <span style={{ background: 'rgba(59,130,246,0.15)', color: 'var(--color-pending)', borderRadius: '10px', padding: '1px 7px', fontSize: '10px' }}>
+                                  {(itemDrawings[item.id] || []).length}
+                                </span>
+                              )}
+                            </span>
+                            <label
+                              htmlFor={`drawing-upload-${item.id}`}
+                              style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '6px', background: 'rgba(139,92,246,0.06)' }}
+                            >
+                              + Upload PDF
+                              <input
+                                id={`drawing-upload-${item.id}`}
+                                type="file"
+                                accept="application/pdf"
+                                style={{ display: 'none' }}
+                                onChange={e => {
+                                  if (e.target.files[0]) handleDrawingUpload(item.id, e.target.files[0]);
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          {drawingsLoading ? (
+                            <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Loading drawings…</p>
+                          ) : (itemDrawings[item.id] || []).length === 0 ? (
+                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>No drawings uploaded yet.</p>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {(itemDrawings[item.id] || []).map((drawing) => (
+                                <div key={drawing.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)', minWidth: 0 }}>
+                                  <span style={{ fontSize: '12px', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>📄 {drawing.file_name}</span>
+                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', flexShrink: 0 }}>{new Date(drawing.uploaded_at).toLocaleDateString()}</span>
+                                  <button type="button" onClick={() => openDrawingViewer(drawing)}
+                                    style={{ background: 'none', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '6px', color: 'var(--color-pending)', cursor: 'pointer', fontSize: '11px', fontWeight: '600', padding: '3px 8px', flexShrink: 0 }}>
+                                    View
+                                  </button>
+                                  <button type="button" onClick={() => handleDrawingDelete(drawing, item.id)}
+                                    style={{ background: 'none', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: 'var(--color-stale)', cursor: 'pointer', fontSize: '11px', fontWeight: '600', padding: '3px 8px', flexShrink: 0 }}>
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -2514,6 +2687,48 @@ export default function CRMHome() {
           </form>
         </div>
       </div>
+
+      {/* ── PDF DRAWING VIEWER MODAL ── */}
+      {viewerDrawing && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 2000, display: 'flex', flexDirection: 'column' }}
+          onClick={e => { if (e.target === e.currentTarget) closeDrawingViewer(); }}
+        >
+          {/* Header bar */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: 'var(--bg-sidebar)', borderBottom: '1px solid var(--border-color)', flexShrink: 0, gap: '16px' }}>
+            <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+              📄 {viewerDrawing.file_name}
+            </span>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
+              {viewerUrl && (
+                <a href={viewerUrl} target="_blank" rel="noreferrer"
+                  style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-accent)', textDecoration: 'none', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '8px', padding: '6px 14px' }}>
+                  ↓ Download
+                </a>
+              )}
+              <button onClick={closeDrawingViewer}
+                style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px 14px', fontSize: '20px', lineHeight: 1 }}>
+                ×
+              </button>
+            </div>
+          </div>
+
+          {/* Viewer body */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', minHeight: 0 }}>
+            {viewerLoading ? (
+              <div style={{ color: 'var(--text-muted)', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '40px', height: '40px', border: '3px solid var(--border-color)', borderTopColor: 'var(--color-accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                Loading drawing…
+              </div>
+            ) : viewerUrl ? (
+              <iframe src={viewerUrl} title={viewerDrawing.file_name}
+                style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px', background: '#fff' }} />
+            ) : (
+              <p style={{ color: 'var(--color-stale)' }}>Failed to load drawing.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
