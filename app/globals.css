@@ -272,6 +272,13 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
+  position: sticky;
+  top: -32px;
+  z-index: 100;
+  background: var(--bg-app);
+  padding: 16px 0;
+  margin: -16px 0;
+  transition: all 0.3s ease;
 }
 
 .kpi-card {

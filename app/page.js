@@ -1049,10 +1049,10 @@ export default function CRMHome() {
               }}
               style={{ cursor: 'pointer' }}
             >
-              <span className="kpi-title">Pending Quotation</span>
+              <span className="kpi-title">Inquiries Without Quote</span>
               <div className="kpi-value" style={{ color: 'var(--color-pending)' }}>
                 {pendingQuotations}
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>waiting</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>pending</span>
               </div>
               <div className="kpi-indicator" style={{ background: 'var(--color-pending)' }}></div>
             </div>
@@ -1113,7 +1113,7 @@ export default function CRMHome() {
 
                     <div className="kpi-card glass-panel">
                       <div className="kpi-header">
-                        <span className="kpi-title">Pending Quotations</span>
+                        <span className="kpi-title">Inquiries Without Quote</span>
                         <div className="kpi-icon-wrapper pend">
                           <FileText size={18} />
                         </div>
@@ -1490,7 +1490,7 @@ export default function CRMHome() {
                       marginBottom: '16px'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        ⏱️ Showing only inquiries with <strong>Pending Quotations</strong> (Not canceled, no quotation # submitted yet).
+                        ⏱️ Showing only <strong>Inquiries Without Quote</strong> (Not canceled, no quotation # submitted yet).
                       </span>
                       <button 
                         onClick={() => setShowOnlyPendingQuotes(false)} 
