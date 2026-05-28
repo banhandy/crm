@@ -1175,3 +1175,125 @@ body {
     font-size: 9px;
   }
 }
+
+/* ==========================================================================
+   Dashboard Top-Row KPI Metrics Grid & Column Sorting
+   ========================================================================== */
+
+/* KPI Grid Layout */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* responsive grid layout */
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Premium KPI Glassmorphic Card */
+.kpi-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 var(--shadow-main);
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+
+.kpi-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Beautiful Icon wrapper gradients */
+.kpi-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.kpi-icon-wrapper.val {
+  background: linear-gradient(135deg, var(--color-won), #059669);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+}
+
+.kpi-icon-wrapper.pend {
+  background: linear-gradient(135deg, var(--color-pending), #2563eb);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+}
+
+.kpi-icon-wrapper.stale {
+  background: linear-gradient(135deg, var(--color-stale), #dc2626);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+}
+
+.kpi-icon-wrapper.conv {
+  background: linear-gradient(135deg, var(--color-accent), #7c3aed);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+}
+
+/* Interactive Sorting Headers */
+.sortable-header {
+  cursor: pointer !important;
+  user-select: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sortable-header:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="light"] .sortable-header:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+

@@ -25,7 +25,8 @@ import {
   UserCheck,
   Lock,
   LogOut,
-  Menu
+  Menu,
+  DollarSign
 } from 'lucide-react';
 
 // Helper to calculate working days (excluding weekends) between two dates
@@ -108,6 +109,30 @@ export default function CRMHome() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [picFilter, setPicFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+
+  // Sorting States
+  const [sortField, setSortField] = useState('inquiry_date');
+  const [sortDirection, setSortDirection] = useState('desc');
+
+  // Helper to get dynamic inquiry total as a number for numerical sorting & aggregates
+  const getInquiryTotalNumeric = (inq) => {
+    const items = inq.inquiry_items || [];
+    const itemsTotal = items.reduce((sum, item) => sum + (parseFloat(item.total_price) || 0), 0);
+    const toolingTotal = items.reduce((sum, item) => sum + (parseFloat(item.tooling_cost) || 0), 0);
+    const grandTotal = itemsTotal + toolingTotal;
+    const rate = inq.currency === 'EUR' ? 1.08 : inq.currency === 'IDR' ? 1 / 16200 : 1.0;
+    return grandTotal * rate;
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
 
   // Active Modals & Selected Drawer State
   const [selectedInquiry, setSelectedInquiry] = useState(null);
@@ -329,6 +354,15 @@ export default function CRMHome() {
     ? Math.round((wonOrdersCount / totalInquiries) * 100) 
     : 0;
 
+  // Active Pipeline Value Calculation
+  const activePipelineInquiries = inquiries.filter(i => i.status !== 'PO Won' && i.status !== 'Canceled');
+  const activePipelineValueUSD = activePipelineInquiries.reduce((sum, i) => sum + getInquiryTotalNumeric(i), 0);
+  const activePipelineCount = activePipelineInquiries.length;
+
+  const formatPipelineValueUSD = () => {
+    return `$ ${activePipelineValueUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   // Filtering Logic for Inquiries Table
   const filteredInquiries = inquiries.filter(inq => {
     const custName = inq.customers?.company_name || '';
@@ -354,6 +388,37 @@ export default function CRMHome() {
 
     return matchesSearch && matchesStatus && matchesPIC && matchesCategory;
   });
+
+  // Sorting Logic for Inquiries Table
+  const sortedFilteredInquiries = [...filteredInquiries].sort((a, b) => {
+    let valA, valB;
+    if (sortField === 'inquiry_date') {
+      valA = new Date(a.inquiry_date || 0).getTime();
+      valB = new Date(b.inquiry_date || 0).getTime();
+    } else if (sortField === 'customer') {
+      valA = (a.customers?.company_name || '').toLowerCase();
+      valB = (b.customers?.company_name || '').toLowerCase();
+    } else if (sortField === 'quotation_number') {
+      valA = (a.quotation_number || '').toLowerCase();
+      valB = (b.quotation_number || '').toLowerCase();
+    } else if (sortField === 'pic') {
+      valA = (a.customers?.pic_name || '').toLowerCase();
+      valB = (b.customers?.pic_name || '').toLowerCase();
+    } else if (sortField === 'status') {
+      valA = (a.status || '').toLowerCase();
+      valB = (b.status || '').toLowerCase();
+    } else if (sortField === 'value') {
+      valA = getInquiryTotalNumeric(a);
+      valB = getInquiryTotalNumeric(b);
+    } else {
+      return 0;
+    }
+
+    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
 
   // Action: Add new Customer
   const handleAddCustomer = async (e) => {
@@ -792,6 +857,11 @@ export default function CRMHome() {
   // ----------------------------------------------------
   // RENDER WORKSPACE (If authenticated)
   // ----------------------------------------------------
+  const renderSortIcon = (field) => {
+    if (sortField !== field) return <span style={{ marginLeft: '6px', opacity: 0.35, fontSize: '11px', display: 'inline-block', transition: 'all 0.2s ease' }}>⇅</span>;
+    return <span style={{ marginLeft: '6px', color: 'var(--color-accent)', fontSize: '11px', display: 'inline-block', transition: 'all 0.2s ease' }}>{sortDirection === 'asc' ? '▲' : '▼'}</span>;
+  };
+
   return (
     <div className="app-container">
       {/* 1. SIDEBAR NAVIGATION */}
@@ -1002,6 +1072,53 @@ export default function CRMHome() {
               {/* TAB 1: DASHBOARD VIEW */}
               {activeTab === 'dashboard' && (
                 <>
+                  {/* TOP-ROW KPI METRICS GRID */}
+                  <div className="kpi-grid">
+                    <div className="kpi-card glass-panel">
+                      <div className="kpi-header">
+                        <span className="kpi-title">Active Pipeline Value</span>
+                        <div className="kpi-icon-wrapper val">
+                          <DollarSign size={18} />
+                        </div>
+                      </div>
+                      <div className="kpi-value">{formatPipelineValueUSD()}</div>
+                      <div className="kpi-desc">Converted dynamic total (USD base)</div>
+                    </div>
+
+                    <div className="kpi-card glass-panel">
+                      <div className="kpi-header">
+                        <span className="kpi-title">Pending Quotations</span>
+                        <div className="kpi-icon-wrapper pend">
+                          <FileText size={18} />
+                        </div>
+                      </div>
+                      <div className="kpi-value">{pendingQuotations}</div>
+                      <div className="kpi-desc">Inquiries missing quotation numbers</div>
+                    </div>
+
+                    <div className="kpi-card glass-panel">
+                      <div className="kpi-header">
+                        <span className="kpi-title">Stale Inquiries</span>
+                        <div className="kpi-icon-wrapper stale">
+                          <AlertTriangle size={18} />
+                        </div>
+                      </div>
+                      <div className="kpi-value">{staleCount}</div>
+                      <div className="kpi-desc">No update activity in &gt; 3 days</div>
+                    </div>
+
+                    <div className="kpi-card glass-panel">
+                      <div className="kpi-header">
+                        <span className="kpi-title">Conversion Rate</span>
+                        <div className="kpi-icon-wrapper conv">
+                          <TrendingUp size={18} />
+                        </div>
+                      </div>
+                      <div className="kpi-value">{conversionRate}%</div>
+                      <div className="kpi-desc">Inquiries won to date</div>
+                    </div>
+                  </div>
+
                   <div className="dashboard-grid">
                   {/* Left Column: Stale follow-up items needing immediate attention */}
                   <div className="glass-panel section-card">
@@ -1342,19 +1459,19 @@ export default function CRMHome() {
                       <table className="crm-table">
                         <thead>
                           <tr>
-                            <th>Inquiry Date</th>
-                            <th>Customer</th>
+                            <th className="sortable-header" onClick={() => handleSort('inquiry_date')}>Inquiry Date {renderSortIcon('inquiry_date')}</th>
+                            <th className="sortable-header" onClick={() => handleSort('customer')}>Customer {renderSortIcon('customer')}</th>
                             <th>Items</th>
                             <th>Type</th>
-                            <th>Quot. #</th>
+                            <th className="sortable-header" onClick={() => handleSort('quotation_number')}>Quot. # {renderSortIcon('quotation_number')}</th>
                             <th>Lead Time</th>
-                            <th>Value</th>
-                            <th>PIC</th>
-                            <th>Status</th>
+                            <th className="sortable-header" onClick={() => handleSort('value')}>Value {renderSortIcon('value')}</th>
+                            <th className="sortable-header" onClick={() => handleSort('pic')}>PIC {renderSortIcon('pic')}</th>
+                            <th className="sortable-header" onClick={() => handleSort('status')}>Status {renderSortIcon('status')}</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredInquiries.map(inq => {
+                          {sortedFilteredInquiries.map(inq => {
                             const isStaleItem = isStale(inq.last_activity_at) && inq.status !== 'PO Won' && inq.status !== 'Canceled';
                             return (
                               <tr key={inq.id} onClick={() => openInquiryDrawer(inq)}>
