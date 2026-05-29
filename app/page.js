@@ -1743,7 +1743,12 @@ export default function CRMHome() {
                             style={{ background: 'none', border: 'none', color: 'var(--color-stale)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
                             onClick={() => {
                               const updated = selectedInquiry.inquiry_items.filter((_, idx) => idx !== index);
-                              setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                              const newParentStatus = getAggregateStatus({ ...selectedInquiry, inquiry_items: updated });
+                              setSelectedInquiry({ 
+                                ...selectedInquiry, 
+                                status: newParentStatus,
+                                inquiry_items: updated 
+                              });
                             }}
                           >
                             <X size={14} /> Remove
@@ -1823,7 +1828,12 @@ export default function CRMHome() {
                             onChange={e => {
                               const updated = [...selectedInquiry.inquiry_items];
                               updated[index].status = e.target.value;
-                              setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                              const newParentStatus = getAggregateStatus({ ...selectedInquiry, inquiry_items: updated });
+                              setSelectedInquiry({ 
+                                ...selectedInquiry, 
+                                status: newParentStatus,
+                                inquiry_items: updated 
+                              });
                             }}
                           >
                             <option value="Pending Quotation">Pending Quotation</option>
@@ -2206,9 +2216,15 @@ export default function CRMHome() {
                     packing_cost: '',
                     cfr: '',
                     tooling_cost: '',
+                    status: 'Pending Quotation',
                     showDetails: false
                   });
-                  setSelectedInquiry({ ...selectedInquiry, inquiry_items: updated });
+                  const newParentStatus = getAggregateStatus({ ...selectedInquiry, inquiry_items: updated });
+                  setSelectedInquiry({ 
+                    ...selectedInquiry, 
+                    status: newParentStatus, 
+                    inquiry_items: updated 
+                  });
                 }}
               >
                 <Plus size={16} /> Add Line Item
@@ -2332,7 +2348,18 @@ export default function CRMHome() {
               <select 
                 className="form-select"
                 value={selectedInquiry.status}
-                onChange={e => setSelectedInquiry({ ...selectedInquiry, status: e.target.value })}
+                onChange={e => {
+                  const newStatus = e.target.value;
+                  const updatedItems = (selectedInquiry.inquiry_items || []).map(item => ({
+                    ...item,
+                    status: newStatus
+                  }));
+                  setSelectedInquiry({ 
+                    ...selectedInquiry, 
+                    status: newStatus,
+                    inquiry_items: updatedItems
+                  });
+                }}
               >
                 <option value="Pending Quotation">Pending Quotation</option>
                 <option value="Submitted">Submitted</option>
