@@ -661,7 +661,13 @@ export default function CRMHome() {
       showFai: item.status === 'PO Won' ? true : !!item.showFai,
       showDetails: item.status === 'PO Won' ? true : !!item.showDetails
     }));
-    setSelectedInquiry({ ...inq, inquiry_items: items });
+    const aggStatus = getAggregateStatus({ ...inq, inquiry_items: items });
+    const normalizedStatus = aggStatus.startsWith('PO Won (') ? 'PO Won' : aggStatus;
+    setSelectedInquiry({ 
+      ...inq, 
+      status: normalizedStatus,
+      inquiry_items: items 
+    });
     setIsDrawerOpen(true);
     setItemDrawings({});
     fetchDrawingsForItems(items);
