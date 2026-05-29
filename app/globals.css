@@ -3,17 +3,18 @@
 :root {
   --font-family: 'Outfit', sans-serif;
   
-  /* HSL Tailored Dark Theme */
-  --bg-app: #090b0e;
-  --bg-sidebar: rgba(15, 18, 24, 0.85);
-  --bg-card: rgba(22, 27, 36, 0.65);
-  --bg-card-hover: rgba(30, 37, 48, 0.8);
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
+  /* HSL Tailored Dark Theme (Sleek Dark Navy/Slate) */
+  --bg-app: #0c101b;
+  --bg-sidebar: #090c15;
+  --bg-card: #141923;
+  --bg-card-hover: #1b2230;
+  --text-main: #e6edf3;
+  --text-muted: #8892b0;
   --border-color: rgba(255, 255, 255, 0.08);
   --border-hover: rgba(255, 255, 255, 0.16);
-  --input-bg: rgba(13, 16, 21, 0.8);
-  --shadow-main: rgba(0, 0, 0, 0.4);
+  --input-bg: #090c15;
+  --shadow-main: rgba(0, 0, 0, 0.45);
+  --calendar-icon-filter: invert(1);
   
   /* Glowing Status Colors */
   --color-won: #10b981;
@@ -24,22 +25,23 @@
   --color-follow-glow: rgba(245, 158, 11, 0.2);
   --color-stale: #ef4444;
   --color-stale-glow: rgba(239, 68, 68, 0.2);
-  --color-accent: #8b5cf6;
-  --color-accent-glow: rgba(139, 92, 246, 0.2);
+  --color-accent: #3b82f6; /* cobalt blue accent matching the screenshot */
+  --color-accent-glow: rgba(59, 130, 246, 0.2);
 }
 
 [data-theme="light"] {
-  /* HSL Tailored Light Theme */
-  --bg-app: #f5f7fa;
-  --bg-sidebar: rgba(255, 255, 255, 0.9);
-  --bg-card: rgba(255, 255, 255, 0.7);
-  --bg-card-hover: rgba(255, 255, 255, 0.95);
-  --text-main: #111827;
-  --text-muted: #4b5563;
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-hover: rgba(0, 0, 0, 0.15);
+  /* HSL Tailored Light Theme (Clean Crisp White/Slate) */
+  --bg-app: #f4f5f7;
+  --bg-sidebar: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-card-hover: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border-color: #e5e7eb;
+  --border-hover: #d1d5db;
   --input-bg: #ffffff;
-  --shadow-main: rgba(31, 38, 135, 0.07);
+  --shadow-main: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --calendar-icon-filter: invert(0);
   
   --color-won-glow: rgba(16, 185, 129, 0.1);
   --color-pending-glow: rgba(59, 130, 246, 0.1);
@@ -1321,6 +1323,18 @@ body {
   border-color: var(--color-pending) !important;
   box-shadow: 0 0 16px rgba(59, 130, 246, 0.15) !important;
   background: rgba(59, 130, 246, 0.06) !important;
+}
+
+/* Chrome/Safari webkit date input calendar indicator style */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: var(--calendar-icon-filter);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 
