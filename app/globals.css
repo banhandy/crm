@@ -448,13 +448,36 @@ body {
 /* Premium Table design */
 .table-container {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 68vh; /* Constrained height to enable vertical scroll inside the card box */
   border-radius: 12px;
   border: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+/* Custom sleek scrollbar for table container */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
 }
 
 .crm-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate; /* Required for sticky header borders to look clean */
+  border-spacing: 0;
   text-align: left;
 }
 
@@ -465,11 +488,15 @@ body {
   text-transform: uppercase;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border-color);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-card); /* Solid background to prevent rows bleeding through on scroll */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: inset 0 -1px 0 var(--border-color); /* Premium clean bottom border overlay */
 }
 
 [data-theme="light"] .crm-table th {
-  background: rgba(0, 0, 0, 0.01);
+  background: var(--bg-card);
 }
 
 .crm-table td {
