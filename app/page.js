@@ -150,6 +150,7 @@ export default function CRMHome() {
   // Active Modals & Selected Drawer State
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState('view'); // 'view' or 'edit'
   const [isAddInquiryOpen, setIsAddInquiryOpen] = useState(false);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
 
@@ -668,6 +669,7 @@ export default function CRMHome() {
       status: normalizedStatus,
       inquiry_items: items 
     });
+    setDrawerMode('view'); // Always default to view-only mode for review meetings!
     setIsDrawerOpen(true);
     setItemDrawings({});
     fetchDrawingsForItems(items);
@@ -1704,19 +1706,77 @@ export default function CRMHome() {
         onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}
       />
       <div className={`drawer ${isDrawerOpen ? 'open' : ''}`}>
-        <div className="drawer-header">
-          <div>
-            <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Edit Inquiry Details</h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-              {selectedInquiry?.customers?.company_name}
-            </p>
+        <div className="drawer-header" style={{ paddingBottom: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h2 style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {drawerMode === 'view' ? '📋 Inquiry Review' : '✏️ Edit Inquiry Details'}
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px', fontWeight: '500' }}>
+                🏢 {selectedInquiry?.customers?.company_name}
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Premium Switcher Tab Segment */}
+              {selectedInquiry && (
+                <div style={{ 
+                  display: 'flex', 
+                  background: 'rgba(255,255,255,0.04)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '8px', 
+                  padding: '3px',
+                  marginRight: '8px'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setDrawerMode('view')}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      background: drawerMode === 'view' ? 'var(--color-accent)' : 'transparent',
+                      color: drawerMode === 'view' ? '#fff' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    👁️ View Mode
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDrawerMode('edit')}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      background: drawerMode === 'edit' ? 'var(--color-accent)' : 'transparent',
+                      color: drawerMode === 'edit' ? '#fff' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    ✏️ Edit Mode
+                  </button>
+                </div>
+              )}
+              <button className="drawer-close" style={{ background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }} onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}>
+                <X size={18} />
+              </button>
+            </div>
           </div>
-          <button className="drawer-close" onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}>
-            <X size={20} />
-          </button>
         </div>
 
-        {selectedInquiry && (
+        {selectedInquiry && drawerMode === 'edit' && (
           <form className="drawer-body" onSubmit={handleUpdateInquiry}>
             {/* Line Items Section */}
             <div className="form-group" style={{ marginTop: '8px' }}>
@@ -2423,6 +2483,230 @@ export default function CRMHome() {
               </button>
             </div>
           </form>
+        )}
+
+        {selectedInquiry && drawerMode === 'view' && (
+          <div className="drawer-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px' }}>
+            {/* Overview Summary Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px' }}>
+                <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Inquiry Status</span>
+                {(() => {
+                  const aggStatus = getAggregateStatus(selectedInquiry);
+                  if (aggStatus === 'PO Won') return <span className="status-badge badge-won">PO Won</span>;
+                  if (aggStatus.startsWith('PO Won (')) return <span className="status-badge badge-partial-won">{aggStatus}</span>;
+                  if (aggStatus === 'Pending Quotation') return <span className="status-badge badge-pending">Pending Quotation</span>;
+                  if (aggStatus === 'Submitted') return <span className="status-badge badge-pending" style={{ color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'var(--color-accent-glow)' }}>Submitted</span>;
+                  if (aggStatus === 'Follow Up') return <span className="status-badge badge-follow">Follow Up</span>;
+                  if (aggStatus === 'Canceled') return <span className="status-badge badge-canceled">Canceled</span>;
+                  return <span className="status-badge badge-pending">{aggStatus}</span>;
+                })()}
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px' }}>
+                <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Category Type</span>
+                <span style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-main)', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'inline-block' }}>
+                  {selectedInquiry.category}
+                </span>
+              </div>
+            </div>
+
+            {/* Date and Contact */}
+            <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '14px', border: '1px solid var(--border-color)', borderRadius: '12px', background: 'rgba(255,255,255,0.01)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px', marginBottom: '2px' }}>Inquiry Date</span>
+                  <strong style={{ color: 'var(--text-main)' }}>{new Date(selectedInquiry.inquiry_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px', marginBottom: '2px' }}>Client Contact Person</span>
+                  <strong style={{ color: 'var(--text-main)' }}>{selectedInquiry.customers?.client_contact_person || 'No contact registered'}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Quotation Info */}
+            <div style={{ background: 'rgba(139, 92, 246, 0.04)', border: '1px solid rgba(139, 92, 246, 0.15)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '13px', color: 'var(--color-accent)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid rgba(139, 92, 246, 0.1)', paddingBottom: '6px' }}>
+                📄 Quotation Details
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Quotation Number</span>
+                  <span style={{ fontWeight: '600', color: selectedInquiry.quotation_number ? 'var(--text-main)' : 'var(--color-pending)' }}>
+                    {selectedInquiry.quotation_number || 'Waiting Input'}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Quotation Date</span>
+                  <span style={{ fontWeight: '500', color: 'var(--text-main)' }}>
+                    {selectedInquiry.quotation_date ? new Date(selectedInquiry.quotation_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Lead Time</span>
+                  <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                    {selectedInquiry.quotation_number ? `${selectedInquiry.lead_time_days || '-'} working days` : `${getDaysOpen(selectedInquiry.inquiry_date)} days open`}
+                  </span>
+                </div>
+              </div>
+              
+              {selectedInquiry.status === 'PO Won' && selectedInquiry.po_number && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', borderTop: '1px solid rgba(139, 92, 246, 0.1)', paddingTop: '10px', fontSize: '13px' }}>
+                  <div>
+                    <span style={{ color: 'var(--color-won)', display: 'block', fontSize: '11px', fontWeight: '600' }}>🏆 Won Purchase Order (PO) Number</span>
+                    <strong style={{ color: 'var(--color-won)', fontSize: '15px' }}>{selectedInquiry.po_number}</strong>
+                  </div>
+                  {selectedInquiry.order_review && (
+                    <div style={{ marginTop: '4px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '8px', padding: '10px' }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px', textTransform: 'uppercase', marginBottom: '2px' }}>Order Review Notes</span>
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-main)', fontStyle: 'italic', lineHeight: '1.4' }}>{selectedInquiry.order_review}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Line Items View */}
+            <div>
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px', marginBottom: '12px' }}>
+                <span style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '13px' }}>📋 Inquiry Line Items</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{(selectedInquiry.inquiry_items || []).length} item(s)</span>
+              </label>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {(selectedInquiry.inquiry_items || []).map((item, index) => {
+                  const cast = parseFloat(item.cast_price) || 0;
+                  const mach = parseFloat(item.mach_price) || 0;
+                  const surf = parseFloat(item.surface_treatment) || 0;
+                  const pack = parseFloat(item.packing_cost) || 0;
+                  const cfrVal = parseFloat(item.cfr) || 0;
+                  const quantity = parseInt(item.qty) || 0;
+                  const liveTotalPerQty = cast + mach + surf + pack + cfrVal;
+                  const liveTotalPrice = liveTotalPerQty * quantity;
+                  const currencySym = selectedInquiry.currency === 'USD' ? '$' : selectedInquiry.currency === 'EUR' ? '€' : 'Rp';
+
+                  return (
+                    <div key={index} style={{ 
+                      background: 'rgba(255, 255, 255, 0.01)', 
+                      padding: '16px', 
+                      borderRadius: '12px', 
+                      border: '1px solid var(--border-color)', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '12px' 
+                    }}>
+                      {/* Name & Basic Info */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
+                            {index + 1}. {item.item_name || 'Unnamed Item'}
+                          </h4>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '11px', textTransform: 'uppercase', fontWeight: '500' }}>
+                            {item.material && <span style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '2px 6px' }}>🧪 {item.material}</span>}
+                            {item.process && <span style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '2px 6px' }}>⚙️ {item.process}</span>}
+                            {item.tipe_proses && <span style={{ background: 'rgba(139,92,246,0.08)', color: 'var(--color-accent)', border: '1px solid rgba(139,92,246,0.15)', borderRadius: '4px', padding: '2px 6px' }}>🏷️ {item.tipe_proses}</span>}
+                          </div>
+                        </div>
+                        <span className="status-badge" style={{
+                          background: item.status === 'PO Won' ? 'var(--color-won-glow)' : item.status === 'Canceled' ? 'var(--color-stale-glow)' : item.status === 'Follow Up' ? 'var(--color-follow-glow)' : 'rgba(255,255,255,0.04)',
+                          color: item.status === 'PO Won' ? 'var(--color-won)' : item.status === 'Canceled' ? 'var(--color-stale)' : item.status === 'Follow Up' ? 'var(--color-follow)' : 'var(--text-muted)',
+                          fontWeight: '600'
+                        }}>
+                          {item.status || 'Pending Quotation'}
+                        </span>
+                      </div>
+
+                      {/* Financial / Qty Summary */}
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: '1fr 1fr 1fr', 
+                        gap: '12px', 
+                        background: 'rgba(255, 255, 255, 0.02)', 
+                        padding: '10px 14px', 
+                        borderRadius: '8px', 
+                        fontSize: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.02)'
+                      }}>
+                        <div>
+                          <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Quantity</span>
+                          <strong style={{ color: 'var(--text-main)', fontSize: '13px' }}>📦 {quantity.toLocaleString()} pcs</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Price / Qty</span>
+                          <strong style={{ color: 'var(--text-main)', fontSize: '13px' }}>{currencySym} {liveTotalPerQty.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Total Price</span>
+                          <strong style={{ color: 'var(--color-won)', fontSize: '13px' }}>{currencySym} {liveTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                        </div>
+                      </div>
+
+                      {/* Tooling and FAI section if relevant */}
+                      {(item.tooling_cost || (item.fai_status && item.fai_status !== 'Pending')) && (
+                        <div style={{ display: 'grid', gridTemplateColumns: item.tooling_cost ? '1fr 1.5fr' : '1fr', gap: '12px', fontSize: '12px', borderTop: '1px dashed var(--border-color)', paddingTop: '8px' }}>
+                          {item.tooling_cost && (
+                            <div>
+                              <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Tooling Cost</span>
+                              <strong style={{ color: 'var(--text-main)' }}>{currencySym} {parseFloat(item.tooling_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
+                            </div>
+                          )}
+                          {item.fai_status && item.fai_status !== 'Pending' && (
+                            <div>
+                              <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Product Engineering FAI Status</span>
+                              <span style={{ 
+                                fontWeight: '700', 
+                                color: item.fai_status === 'Approved' ? 'var(--color-won)' : item.fai_status === 'Rejected' ? 'var(--color-stale)' : 'var(--color-follow)'
+                              }}>
+                                {item.fai_status === 'Approved' ? '✓ Qualified / Approved' : item.fai_status === 'In Progress' ? '⚙️ In Progress / Trial' : `✗ Rejected`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Drawings list (View-only) */}
+                      {item.id && (itemDrawings[item.id] || []).length > 0 && (
+                        <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-accent)', display: 'block' }}>📎 Uploaded Technical Drawings:</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {(itemDrawings[item.id] || []).map((drawing) => (
+                              <div key={drawing.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.01)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>📄 {drawing.file_name}</span>
+                                <button type="button" onClick={() => openDrawingViewer(drawing)}
+                                  style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '4px', color: 'var(--color-pending)', cursor: 'pointer', fontSize: '10px', fontWeight: '700', padding: '2px 8px' }}>
+                                  Open PDF
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* General Remarks */}
+            {selectedInquiry.remark && (
+              <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '14px' }}>
+                <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Follow-up Remarks / Activities</span>
+                <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-main)', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{selectedInquiry.remark}</p>
+              </div>
+            )}
+
+            {/* Drawer Footer View Only */}
+            <div className="drawer-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '12px' }}>
+              <button 
+                type="button" 
+                className="cancel-btn" 
+                style={{ width: '100%', padding: '12px', fontSize: '13px', fontWeight: '700', background: 'rgba(255,255,255,0.04)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
+                onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}
+              >
+                Close Meeting Review
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
