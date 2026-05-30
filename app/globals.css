@@ -3,17 +3,17 @@
 :root {
   --font-family: 'Outfit', sans-serif;
   
-  /* HSL Tailored Dark Theme (Sleek Dark Navy/Slate) */
-  --bg-app: #0c101b;
-  --bg-sidebar: #090c15;
-  --bg-card: #141923;
-  --bg-card-hover: #1b2230;
-  --text-main: #e6edf3;
-  --text-muted: #8892b0;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.16);
-  --input-bg: #090c15;
-  --shadow-main: rgba(0, 0, 0, 0.45);
+  /* Modern Premium Slate Blue Dark Theme (Tuned down, rich B2B aesthetic) */
+  --bg-app: #131e2c;          /* Muted steel-navy background */
+  --bg-sidebar: #0f1a27;      /* Solid slate blue sidebar */
+  --bg-card: #192739;         /* Sophisticated medium slate card base */
+  --bg-card-hover: #213147;   /* Sleek card hover highlight */
+  --text-main: #eef2f6;       /* Crisp silver-white legibility */
+  --text-muted: #8ba2bc;      /* Soft blue-gray details */
+  --border-color: rgba(139, 162, 188, 0.12); /* Balanced low-contrast borders */
+  --border-hover: rgba(139, 162, 188, 0.22);
+  --input-bg: #0a121c;        /* Slightly darker slate for inputs */
+  --shadow-main: rgba(0, 0, 0, 0.35);
   --calendar-icon-filter: invert(1);
   
   /* Glowing Status Colors */
