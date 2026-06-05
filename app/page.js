@@ -1034,7 +1034,7 @@ export default function CRMHome() {
 
         <div className="flex-1 p-8 pb-24 md:pb-8 overflow-y-auto overflow-x-hidden flex flex-col gap-8 box-border w-full">
           {/* A. KPI BANNER RIBBON */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 sticky top-[-32px] z-30 bg-background/90 backdrop-blur-md py-4 -my-4 border-b border-border/10">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 relative md:sticky md:top-[-32px] z-30 bg-background/90 backdrop-blur-md py-4 -my-4 border-b border-border/10">
             <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-primary bg-card/60 backdrop-blur-md">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted">Total Inquiries</span>
               <div className="text-2xl font-bold flex items-baseline gap-1.5 text-foreground">
