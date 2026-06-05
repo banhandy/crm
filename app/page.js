@@ -29,6 +29,7 @@ import {
   Mail,
   MapPin,
   Calendar,
+  CalendarRange,
   UserCheck,
   Lock,
   LogOut,
