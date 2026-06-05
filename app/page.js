@@ -165,6 +165,12 @@ export default function CRMHome() {
   const [isAddInquiryOpen, setIsAddInquiryOpen] = useState(false);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
 
+  // Visits & Activity States
+  const [visits, setVisits] = useState([]);
+  const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
+  const [selectedVisitForMinutes, setSelectedVisitForMinutes] = useState(null);
+  const [isLogMinutesOpen, setIsLogMinutesOpen] = useState(false);
+
   // Drawing upload states
   const [itemDrawings, setItemDrawings] = useState({});   // { [itemId]: DrawingRow[] }
   const [drawingsLoading, setDrawingsLoading] = useState(false);
@@ -239,6 +245,14 @@ export default function CRMHome() {
         .order('created_at', { ascending: false });
       if (inqErr) throw inqErr;
       setInquiries(inqData || []);
+
+      // Fetch visits
+      const { data: visitData, error: visitErr } = await supabase
+        .from('customer_visits')
+        .select('*')
+        .order('scheduled_at', { ascending: false });
+      if (visitErr) throw visitErr;
+      setVisits(visitData || []);
     } catch (err) {
       console.error('Error fetching data:', err.message);
     } finally {
@@ -303,10 +317,23 @@ export default function CRMHome() {
       )
       .subscribe();
 
+    // Subscribe to customer_visits updates
+    const visitsChannel = supabase
+      .channel('visits_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'customer_visits' },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(inquiriesChannel);
       supabase.removeChannel(customersChannel);
       supabase.removeChannel(inquiryItemsChannel);
+      supabase.removeChannel(visitsChannel);
     };
   }, [session]);
 
