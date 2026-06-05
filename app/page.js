@@ -136,7 +136,7 @@ export default function CRMHome() {
   // Sorting States
   const [sortField, setSortField] = useState('inquiry_date');
   const [sortDirection, setSortDirection] = useState('desc');
-  const [showOnlyPendingQuotes, setShowOnlyPendingQuotes] = useState(false);
+  const [kpiFilter, setKpiFilter] = useState('all'); // 'all' | 'pending_quote' | 'follow_up' | 'stale' | 'won'
 
   // Helper to get dynamic inquiry total as a number for numerical sorting & aggregates
   const getInquiryTotalNumeric = (inq) => {
@@ -424,9 +424,14 @@ export default function CRMHome() {
 
   // Filtering Logic for Inquiries Table
   const filteredInquiries = inquiries.filter(inq => {
-    if (showOnlyPendingQuotes) {
-      const isPending = !inq.quotation_number && inq.status !== 'Canceled';
-      if (!isPending) return false;
+    if (kpiFilter === 'pending_quote') {
+      if (!(!inq.quotation_number && inq.status !== 'Canceled')) return false;
+    } else if (kpiFilter === 'follow_up') {
+      if (inq.status !== 'Follow Up') return false;
+    } else if (kpiFilter === 'stale') {
+      if (!isStale(inq.last_activity_at) || inq.status === 'PO Won' || inq.status === 'Canceled') return false;
+    } else if (kpiFilter === 'won') {
+      if (inq.status !== 'PO Won') return false;
     }
     const custName = inq.customers?.company_name || '';
     const qNo = inq.quotation_number || '';
@@ -1175,52 +1180,76 @@ export default function CRMHome() {
 
         <div className="flex-1 p-8 pb-24 md:pb-8 overflow-y-auto overflow-x-hidden flex flex-col gap-8 box-border w-full">
           {/* A. KPI BANNER RIBBON */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 relative md:sticky md:top-[-32px] z-30 bg-background/90 backdrop-blur-md py-4 -my-4 border-b border-border/10">
-            <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-primary bg-card/60 backdrop-blur-md">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Total Inquiries</span>
-              <div className="text-2xl font-bold flex items-baseline gap-1.5 text-foreground">
-                {totalInquiries}
-                <span className="text-[11px] text-muted font-normal uppercase">requests</span>
-              </div>
-            </Card>
-
-            <Card 
-              className={`p-5 flex flex-col gap-2 relative border-l-4 border-l-pending bg-card/60 backdrop-blur-md cursor-pointer hover:bg-card-hover/40 transition-all duration-200 ${showOnlyPendingQuotes ? 'ring-1 ring-pending' : ''}`}
-              onClick={() => {
-                setShowOnlyPendingQuotes(prev => !prev);
-                if (activeTab !== 'inquiries') {
-                  setActiveTab('inquiries');
-                }
-              }}
+          <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-5 relative md:sticky md:top-[-32px] z-30 bg-background/90 backdrop-blur-md py-4 -my-4 border-b border-border/10">
+            {/* Total Inquiries */}
+            <Card
+              className={`p-4 md:p-5 flex flex-col gap-2 relative border-l-4 border-l-primary bg-card/60 backdrop-blur-md cursor-pointer hover:bg-card-hover/40 transition-all duration-200 ${kpiFilter === 'all' && activeTab === 'inquiries' ? 'ring-1 ring-primary' : ''}`}
+              onClick={() => { setKpiFilter('all'); setActiveTab('inquiries'); }}
             >
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Inquiries Without Quote</span>
-              <div className="text-2xl font-bold flex items-baseline gap-1.5 text-pending">
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-muted">Total Inquiries</span>
+              <div className="text-xl md:text-2xl font-bold flex items-baseline gap-1.5 text-foreground">
+                {totalInquiries}
+                <span className="text-[10px] md:text-[11px] text-muted font-normal uppercase">requests</span>
+              </div>
+            </Card>
+
+            {/* Inquiries Without Quote */}
+            <Card 
+              className={`p-4 md:p-5 flex flex-col gap-2 relative border-l-4 border-l-pending bg-card/60 backdrop-blur-md cursor-pointer hover:bg-card-hover/40 transition-all duration-200 ${kpiFilter === 'pending_quote' ? 'ring-1 ring-pending' : ''}`}
+              onClick={() => { setKpiFilter(prev => prev === 'pending_quote' ? 'all' : 'pending_quote'); setActiveTab('inquiries'); }}
+            >
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-muted">Without Quote</span>
+              <div className="text-xl md:text-2xl font-bold flex items-baseline gap-1.5 text-pending">
                 {pendingQuotations}
-                <span className="text-[11px] text-muted font-normal uppercase">pending</span>
+                <span className="text-[10px] md:text-[11px] text-muted font-normal uppercase">pending</span>
               </div>
             </Card>
 
-            <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-follow bg-card/60 backdrop-blur-md">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Active Follow-up</span>
-              <div className="text-2xl font-bold flex items-baseline gap-1.5 text-follow">
+            {/* Active Follow-up */}
+            <Card
+              className={`p-4 md:p-5 flex flex-col gap-2 relative border-l-4 border-l-follow bg-card/60 backdrop-blur-md cursor-pointer hover:bg-card-hover/40 transition-all duration-200 ${kpiFilter === 'follow_up' ? 'ring-1 ring-follow' : ''}`}
+              onClick={() => { setKpiFilter(prev => prev === 'follow_up' ? 'all' : 'follow_up'); setActiveTab('inquiries'); }}
+            >
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-muted">Active Follow-up</span>
+              <div className="text-xl md:text-2xl font-bold flex items-baseline gap-1.5 text-follow">
                 {followUpCount}
-                <span className="text-[11px] text-muted font-normal uppercase">leads</span>
+                <span className="text-[10px] md:text-[11px] text-muted font-normal uppercase">leads</span>
               </div>
             </Card>
 
-            <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-stale bg-card/60 backdrop-blur-md">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Stale Follow-up (3d+)</span>
-              <div className="text-2xl font-bold flex items-center text-stale">
+            {/* Stale Follow-up */}
+            <Card
+              className={`p-4 md:p-5 flex flex-col gap-2 relative border-l-4 border-l-stale bg-card/60 backdrop-blur-md cursor-pointer hover:bg-card-hover/40 transition-all duration-200 ${kpiFilter === 'stale' ? 'ring-1 ring-stale' : ''}`}
+              onClick={() => { setKpiFilter(prev => prev === 'stale' ? 'all' : 'stale'); setActiveTab('inquiries'); }}
+            >
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-muted">Stale (3d+)</span>
+              <div className="text-xl md:text-2xl font-bold flex items-center text-stale">
                 {staleCount}
                 {staleCount > 0 && <span className="stale-pulse w-2.5 h-2.5 rounded-full bg-stale inline-block ml-3 animate-pulse"></span>}
               </div>
             </Card>
 
-            <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-won bg-card/60 backdrop-blur-md">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Won Conversion</span>
-              <div className="text-2xl font-bold flex items-baseline gap-1.5 text-won">
+            {/* Won Conversion */}
+            <Card
+              className={`p-4 md:p-5 flex flex-col gap-2 relative border-l-4 border-l-won bg-card/60 backdrop-blur-md cursor-pointer hover:bg-card-hover/40 transition-all duration-200 ${kpiFilter === 'won' ? 'ring-1 ring-won' : ''}`}
+              onClick={() => { setKpiFilter(prev => prev === 'won' ? 'all' : 'won'); setActiveTab('inquiries'); }}
+            >
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-muted">Won Conversion</span>
+              <div className="text-xl md:text-2xl font-bold flex items-baseline gap-1.5 text-won">
                 {conversionRate}%
-                <span className="text-[11px] text-muted font-normal normal-case">({wonOrdersCount} POs)</span>
+                <span className="text-[10px] md:text-[11px] text-muted font-normal normal-case">({wonOrdersCount} POs)</span>
+              </div>
+            </Card>
+
+            {/* Upcoming Visits */}
+            <Card
+              className={`p-4 md:p-5 flex flex-col gap-2 relative border-l-4 border-l-primary/60 bg-card/60 backdrop-blur-md cursor-pointer hover:bg-card-hover/40 transition-all duration-200 ${activeTab === 'visits' ? 'ring-1 ring-primary/60' : ''}`}
+              onClick={() => setActiveTab('visits')}
+            >
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-muted">Upcoming Visits</span>
+              <div className="text-xl md:text-2xl font-bold flex items-baseline gap-1.5 text-primary">
+                {visits.filter(v => v.status === 'Scheduled').length}
+                <span className="text-[10px] md:text-[11px] text-muted font-normal uppercase">scheduled</span>
               </div>
             </Card>
           </section>
@@ -1282,6 +1311,22 @@ export default function CRMHome() {
                       </div>
                       <div className="kpi-value">{conversionRate}%</div>
                       <div className="kpi-desc">Inquiries won to date</div>
+                    </div>
+
+                    <div
+                      className="kpi-card glass-panel cursor-pointer hover:border-primary/30 transition-all"
+                      onClick={() => setActiveTab('visits')}
+                    >
+                      <div className="kpi-header">
+                        <span className="kpi-title">Upcoming Visits</span>
+                        <div className="kpi-icon-wrapper" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6' }}>
+                          <CalendarRange size={18} />
+                        </div>
+                      </div>
+                      <div className="kpi-value" style={{ color: '#3b82f6' }}>
+                        {visits.filter(v => v.status === 'Scheduled').length}
+                      </div>
+                      <div className="kpi-desc">Scheduled customer visits</div>
                     </div>
                   </div>
 
@@ -1434,6 +1479,40 @@ export default function CRMHome() {
                           <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Total In Pipeline</span>
                           <span style={{ fontWeight: '700' }}>{inquiries.filter(i => i.status !== 'PO Won' && i.status !== 'Canceled').length}</span>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Upcoming Visits Summary */}
+                    <div className="glass-panel section-card">
+                      <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <CalendarRange size={20} color="#3b82f6" />
+                          Upcoming Visits
+                        </span>
+                        <button
+                          onClick={() => setActiveTab('visits')}
+                          style={{ fontSize: '11px', color: '#3b82f6', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', padding: '3px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                        >
+                          View All →
+                        </button>
+                      </h2>
+                      <div className="flex flex-col gap-2 mt-2">
+                        {visits.filter(v => v.status === 'Scheduled').length === 0 ? (
+                          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No upcoming visits scheduled.</p>
+                        ) : (
+                          visits.filter(v => v.status === 'Scheduled').slice(0, 4).map(visit => {
+                            const cust = customers.find(c => c.id === visit.customer_id);
+                            return (
+                              <div key={visit.id} className="flex justify-between items-center gap-2 p-2.5 rounded-lg border border-border bg-background/20">
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs font-semibold text-foreground truncate">{visit.title}</span>
+                                  <span className="text-[10px] text-muted truncate">🏢 {cust?.company_name || '—'}</span>
+                                </div>
+                                <span className="text-[10px] text-muted shrink-0">{new Date(visit.scheduled_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                              </div>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1647,7 +1726,7 @@ export default function CRMHome() {
                     </div>
                   </div>
 
-                  {showOnlyPendingQuotes && (
+                  {kpiFilter !== 'all' && (
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -1663,10 +1742,15 @@ export default function CRMHome() {
                       marginBottom: '16px'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        ⏱️ Showing only <strong>Inquiries Without Quote</strong> (Not canceled, no quotation # submitted yet).
+                        🔎 Filtering by: <strong>{{
+                          pending_quote: 'Inquiries Without Quote',
+                          follow_up: 'Active Follow-up',
+                          stale: 'Stale (3d+)',
+                          won: 'Won POs',
+                        }[kpiFilter]}</strong>
                       </span>
                       <button 
-                        onClick={() => setShowOnlyPendingQuotes(false)} 
+                        onClick={() => setKpiFilter('all')} 
                         style={{
                           background: 'rgba(255,255,255,0.08)',
                           border: 'none',
