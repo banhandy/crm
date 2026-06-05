@@ -1,3 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--bg-app);
+  --color-foreground: var(--text-main);
+  
+  --color-sidebar: var(--bg-sidebar);
+  --color-card: var(--bg-card);
+  --color-card-hover: var(--bg-card-hover);
+  --color-border: var(--border-color);
+  --color-input: var(--input-bg);
+  --color-ring: var(--color-accent);
+  
+  --color-primary: var(--color-accent);
+  --color-primary-foreground: #ffffff;
+  
+  --color-won: var(--color-won);
+  --color-won-glow: var(--color-won-glow);
+  --color-pending: var(--color-pending);
+  --color-pending-glow: var(--color-pending-glow);
+  --color-follow: var(--color-follow);
+  --color-follow-glow: var(--color-follow-glow);
+  --color-stale: var(--color-stale);
+  --color-stale-glow: var(--color-stale-glow);
+  
+  --color-muted: var(--text-muted);
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
