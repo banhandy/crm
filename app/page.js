@@ -1668,92 +1668,70 @@ export default function CRMHome() {
 
       {/* 3. SLIDE-OUT EDIT DRAWER */}
       <div 
-        className={`drawer-overlay ${isDrawerOpen ? 'open' : ''}`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}
       />
-      <div className={`drawer ${isDrawerOpen ? 'open' : ''}`}>
-        <div className="drawer-header" style={{ paddingBottom: '16px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'stretch' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div className={`fixed top-0 right-0 bottom-0 w-full sm:w-[600px] md:w-[66vw] max-w-[950px] bg-sidebar border-l border-border shadow-2xl z-[1001] transition-transform duration-300 ease-in-out flex flex-col p-6 md:p-8 overflow-x-hidden ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="border-b border-border pb-4 mb-6 flex flex-col gap-3 items-stretch shrink-0">
+          <div className="flex justify-between items-start">
             <div>
-              <h2 style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2">
                 {drawerMode === 'view' ? '📋 Inquiry Review' : '✏️ Edit Inquiry Details'}
               </h2>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px', fontWeight: '500' }}>
+              <p className="text-xs text-muted font-medium mt-0.5">
                 🏢 {selectedInquiry?.customers?.company_name}
               </p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="flex items-center gap-2">
               {/* Premium Switcher Tab Segment */}
               {selectedInquiry && (
-                <div style={{ 
-                  display: 'flex', 
-                  background: 'rgba(255,255,255,0.04)', 
-                  border: '1px solid var(--border-color)', 
-                  borderRadius: '8px', 
-                  padding: '3px',
-                  marginRight: '8px'
-                }}>
+                <div className="flex bg-card/40 border border-border rounded-lg p-1 mr-2">
                   <button
                     type="button"
                     onClick={() => setDrawerMode('view')}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      background: drawerMode === 'view' ? 'var(--color-accent)' : 'transparent',
-                      color: drawerMode === 'view' ? '#fff' : 'var(--text-muted)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      transition: 'all 0.15s ease'
-                    }}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                      drawerMode === 'view'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-muted hover:text-foreground bg-transparent'
+                    }`}
                   >
                     👁️ View Mode
                   </button>
                   <button
                     type="button"
                     onClick={() => setDrawerMode('edit')}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      background: drawerMode === 'edit' ? 'var(--color-accent)' : 'transparent',
-                      color: drawerMode === 'edit' ? '#fff' : 'var(--text-muted)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      transition: 'all 0.15s ease'
-                    }}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                      drawerMode === 'edit'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-muted hover:text-foreground bg-transparent'
+                    }`}
                   >
                     ✏️ Edit Mode
                   </button>
                 </div>
               )}
-              <button className="drawer-close" style={{ background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }} onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}>
-                <X size={18} />
+              <button 
+                type="button"
+                className="bg-card/45 hover:bg-card-hover border border-border rounded-full w-8 h-8 flex items-center justify-center text-muted hover:text-foreground transition-all cursor-pointer"
+                onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}
+              >
+                <X size={16} />
               </button>
             </div>
           </div>
         </div>
 
         {selectedInquiry && drawerMode === 'edit' && (
-          <form className="drawer-body" onSubmit={handleUpdateInquiry}>
+          <form className="flex-grow overflow-y-auto overflow-x-hidden flex flex-col gap-5 w-full pr-1" onSubmit={handleUpdateInquiry}>
             {/* Line Items Section */}
-            <div className="form-group" style={{ marginTop: '8px' }}>
-              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+            <div className="flex flex-col gap-2 min-w-0 mt-2">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted flex justify-between border-b border-border pb-1.5">
                 <span>Line Items</span>
-                <span style={{ fontSize: '11px', textTransform: 'none', color: 'var(--text-muted)' }}>{(selectedInquiry.inquiry_items || []).length} item(s)</span>
+                <span className="normal-case font-normal">{(selectedInquiry.inquiry_items || []).length} item(s)</span>
               </label>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
+              <div className="flex flex-col gap-4 mt-3">
                 {(selectedInquiry.inquiry_items || []).map((item, index) => {
-                  // Live calculations for display
                   const cast = parseFloat(item.cast_price) || 0;
                   const mach = parseFloat(item.mach_price) || 0;
                   const surf = parseFloat(item.surface_treatment) || 0;
@@ -1766,13 +1744,13 @@ export default function CRMHome() {
                   const isExpanded = item.showDetails;
 
                   return (
-                    <div key={index} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-accent)' }}>Item #{index + 1}</span>
+                    <div key={index} className="bg-background/25 p-4 rounded-xl border border-border flex flex-col gap-3 relative">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-primary">Item #{index + 1}</span>
                         {(selectedInquiry.inquiry_items || []).length > 1 && (
                           <button 
                             type="button" 
-                            style={{ background: 'none', border: 'none', color: 'var(--color-stale)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
+                            className="bg-transparent border-none text-stale hover:text-stale/80 cursor-pointer flex items-center gap-1 text-xs"
                             onClick={() => {
                               const updated = selectedInquiry.inquiry_items.filter((_, idx) => idx !== index);
                               const newParentStatus = getAggregateStatus({ ...selectedInquiry, inquiry_items: updated });
@@ -1788,12 +1766,11 @@ export default function CRMHome() {
                         )}
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>Item / Product Name *</label>
-                          <input 
+                      <div className="grid grid-cols-[2fr_1fr] gap-3">
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Item / Product Name *</label>
+                          <Input 
                             type="text" 
-                            className="form-input" 
                             placeholder="e.g. Pump Housing DN150" 
                             required
                             value={item.item_name || ''}
@@ -1804,11 +1781,10 @@ export default function CRMHome() {
                             }}
                           />
                         </div>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>Qty *</label>
-                          <input 
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Qty *</label>
+                          <Input 
                             type="number" 
-                            className="form-input" 
                             placeholder="Qty" 
                             required
                             min="1"
@@ -1822,12 +1798,11 @@ export default function CRMHome() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>Material</label>
-                          <input 
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Material</label>
+                          <Input 
                             type="text" 
-                            className="form-input" 
                             placeholder="e.g. AISI 316" 
                             value={item.material || ''}
                             onChange={e => {
@@ -1837,11 +1812,10 @@ export default function CRMHome() {
                             }}
                           />
                         </div>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>Process</label>
-                          <input 
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Process</label>
+                          <Input 
                             type="text" 
-                            className="form-input" 
                             placeholder="e.g. Casting + Machining" 
                             value={item.process || ''}
                             onChange={e => {
@@ -1851,11 +1825,9 @@ export default function CRMHome() {
                             }}
                           />
                         </div>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-accent)', fontWeight: '600' }}>Item Status</label>
-                          <select 
-                            className="form-select"
-                            style={{ padding: '8px' }}
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-primary font-bold">Item Status</label>
+                          <Select 
                             value={item.status || 'Pending Quotation'}
                             onChange={e => {
                               const updated = [...selectedInquiry.inquiry_items];
@@ -1873,14 +1845,14 @@ export default function CRMHome() {
                             <option value="Follow Up">Follow Up</option>
                             <option value="PO Won">PO Won</option>
                             <option value="Canceled">Canceled</option>
-                          </select>
+                          </Select>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '16px', borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '4px' }}>
+                      <div className="flex gap-4 border-t border-dashed border-border pt-2.5 mt-1">
                         <button
                           type="button"
-                          style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          className="bg-transparent border-none text-primary hover:text-primary/80 cursor-pointer font-semibold text-xs flex items-center gap-1"
                           onClick={() => {
                             const updated = [...selectedInquiry.inquiry_items];
                             updated[index].showDetails = !updated[index].showDetails;
@@ -1892,7 +1864,7 @@ export default function CRMHome() {
                         
                         <button
                           type="button"
-                          style={{ background: 'none', border: 'none', color: 'var(--color-won)', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          className="bg-transparent border-none text-won hover:text-won/80 cursor-pointer font-semibold text-xs flex items-center gap-1"
                           onClick={() => {
                             const updated = [...selectedInquiry.inquiry_items];
                             updated[index].showFai = !updated[index].showFai;
@@ -1904,13 +1876,11 @@ export default function CRMHome() {
                       </div>
 
                       {isExpanded && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '6px', padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '11px' }}>Tipe Proses</label>
-                              <select 
-                                className="form-select"
-                                style={{ padding: '8px' }}
+                        <div className="flex flex-col gap-3 mt-1.5 p-3 bg-background/10 rounded-lg border border-border/20">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Tipe Proses</label>
+                              <Select 
                                 value={item.tipe_proses || ''}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
@@ -1924,14 +1894,12 @@ export default function CRMHome() {
                                 <option value="INVESTMENT CASTING">Investment Casting</option>
                                 <option value="FORGING">Forging</option>
                                 <option value="others">Others</option>
-                              </select>
+                              </Select>
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '11px' }}>Tooling Cost</label>
-                              <input 
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Tooling Cost</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '8px' }}
                                 placeholder="0.00" 
                                 value={item.tooling_cost ?? ''}
                                 onChange={e => {
@@ -1943,13 +1911,12 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>Cast Price</label>
-                              <input 
+                          <div className="grid grid-cols-5 gap-1.5">
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Cast Price</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.cast_price ?? ''}
                                 onChange={e => {
@@ -1959,12 +1926,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>Mach Price</label>
-                              <input 
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Mach Price</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.mach_price ?? ''}
                                 onChange={e => {
@@ -1974,12 +1940,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>Surface Trt.</label>
-                              <input 
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Surface Trt.</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.surface_treatment ?? ''}
                                 onChange={e => {
@@ -1989,12 +1954,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>Packing Cost</label>
-                              <input 
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Packing Cost</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.packing_cost ?? ''}
                                 onChange={e => {
@@ -2004,12 +1968,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>CFR</label>
-                              <input 
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">CFR</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.cfr ?? ''}
                                 onChange={e => {
@@ -2021,39 +1984,32 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', fontSize: '12px' }}>
+                          <div className="flex justify-between border-t border-border/40 pt-2 text-xs">
                             <div>
-                              <span style={{ color: 'var(--text-muted)' }}>Total / Qty: </span>
-                              <strong style={{ color: 'var(--text-main)' }}>{liveTotalPerQty.toFixed(2)}</strong>
+                              <span className="text-muted">Total / Qty: </span>
+                              <strong className="text-foreground">{liveTotalPerQty.toFixed(2)}</strong>
                             </div>
                             <div>
-                              <span style={{ color: 'var(--text-muted)' }}>Total Price: </span>
-                              <strong style={{ color: 'var(--color-won)' }}>{liveTotalPrice.toFixed(2)}</strong>
+                              <span className="text-muted">Total Price: </span>
+                              <strong className="text-won">{liveTotalPrice.toFixed(2)}</strong>
                             </div>
                           </div>
                         </div>
                       )}
 
                       {item.showFai && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '6px', padding: '16px', background: 'var(--color-won-glow)', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(16,185,129,0.1)', paddingBottom: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-won)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className="flex flex-col gap-3 mt-1.5 p-4 bg-won/10 rounded-xl border border-won/20">
+                          <div className="flex justify-between items-center border-b border-won/10 pb-2">
+                            <span className="text-sm font-bold text-won flex items-center gap-1.5">
                               First Article Inspection (FAI) Tracking
                             </span>
-                            <span className="status-badge" style={{ 
-                              background: item.fai_status === 'Approved' ? 'rgba(16, 185, 129, 0.2)' : item.fai_status === 'Rejected' ? 'rgba(239, 68, 68, 0.2)' : item.fai_status === 'In Progress' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.05)',
-                              color: item.fai_status === 'Approved' ? 'var(--color-won)' : item.fai_status === 'Rejected' ? 'var(--color-stale)' : item.fai_status === 'In Progress' ? 'var(--color-follow)' : 'var(--text-muted)'
-                            }}>
-                              {item.fai_status || 'Pending'}
-                            </span>
+                            <Badge variant="won">{item.fai_status || 'Pending'}</Badge>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-won)', textTransform: 'none' }}>FAI Status</label>
-                              <select 
-                                className="form-select"
-                                style={{ padding: '8px' }}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[11px] font-semibold text-won">FAI Status</label>
+                              <Select 
                                 value={item.fai_status || 'Pending'}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
@@ -2065,14 +2021,12 @@ export default function CRMHome() {
                                 <option value="In Progress">In Progress / Trial</option>
                                 <option value="Approved">Approved / Qualified</option>
                                 <option value="Rejected">Rejected</option>
-                              </select>
+                              </Select>
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '11px', color: 'var(--color-won)', textTransform: 'none' }}>Responsible Engineer</label>
-                              <input 
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[11px] font-semibold text-won">Responsible Engineer</label>
+                              <Input 
                                 type="text" 
-                                className="form-input" 
-                                style={{ padding: '8px' }}
                                 placeholder="e.g. PUTRI" 
                                 value={item.fai_engineer || ''}
                                 onChange={e => {
@@ -2084,12 +2038,10 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '10px', textTransform: 'none' }}>Dimensions Check</label>
-                              <select 
-                                className="form-select"
-                                style={{ padding: '6px', fontSize: '12px' }}
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[10px] text-muted">Dimensions Check</label>
+                              <Select 
                                 value={item.fai_dimensions || 'Pending'}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
@@ -2100,13 +2052,11 @@ export default function CRMHome() {
                                 <option value="Pending">Pending</option>
                                 <option value="Passed">Passed</option>
                                 <option value="Failed">Failed</option>
-                              </select>
+                              </Select>
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '10px', textTransform: 'none' }}>Material Cert</label>
-                              <select 
-                                className="form-select"
-                                style={{ padding: '6px', fontSize: '12px' }}
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[10px] text-muted">Material Cert</label>
+                              <Select 
                                 value={item.fai_material_cert || 'Pending'}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
@@ -2117,13 +2067,11 @@ export default function CRMHome() {
                                 <option value="Pending">Pending</option>
                                 <option value="Passed">Passed</option>
                                 <option value="Failed">Failed</option>
-                              </select>
+                              </Select>
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '10px', textTransform: 'none' }}>Testing Report</label>
-                              <select 
-                                className="form-select"
-                                style={{ padding: '6px', fontSize: '12px' }}
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[10px] text-muted">Testing Report</label>
+                              <Select 
                                 value={item.fai_test_report || 'Pending'}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
@@ -2134,16 +2082,15 @@ export default function CRMHome() {
                                 <option value="Pending">Pending</option>
                                 <option value="Passed">Passed</option>
                                 <option value="Failed">Failed</option>
-                              </select>
+                              </Select>
                             </div>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '11px', textTransform: 'none' }}>Remarks / Tolerance Notes</label>
+                          <div className="grid grid-cols-[2fr_1fr] gap-3">
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[11px] text-muted">Remarks / Tolerance Notes</label>
                               <textarea 
-                                className="form-textarea" 
-                                style={{ minHeight: '60px', padding: '8px', fontSize: '13px' }}
+                                className="flex min-h-[60px] w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-all duration-200 resize-y"
                                 placeholder="Note dimensional deviations or test parameters..." 
                                 value={item.fai_remarks || ''}
                                 onChange={e => {
@@ -2153,12 +2100,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '11px', textTransform: 'none' }}>Sign-off Date</label>
-                              <input 
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[11px] text-muted">Sign-off Date</label>
+                              <Input 
                                 type="date" 
-                                className="form-input" 
-                                style={{ padding: '8px', fontSize: '13px' }}
+                                className="text-xs"
                                 value={item.fai_date || ''}
                                 onChange={e => {
                                   const updated = [...selectedInquiry.inquiry_items];
@@ -2173,26 +2119,26 @@ export default function CRMHome() {
 
                       {/* ── Drawings Section (existing items only) ── */}
                       {item.id && (
-                        <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '12px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-pending)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className="border-t border-dashed border-border pt-3 mt-1 flex flex-col gap-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold text-pending flex items-center gap-1.5">
                               📎 Drawings
                               {(itemDrawings[item.id] || []).length > 0 && (
-                                <span style={{ background: 'rgba(59,130,246,0.15)', color: 'var(--color-pending)', borderRadius: '10px', padding: '1px 7px', fontSize: '10px' }}>
+                                <Badge variant="pending" className="px-1.5 py-0.2 text-[10px]">
                                   {(itemDrawings[item.id] || []).length}
-                                </span>
+                                </Badge>
                               )}
                             </span>
                             <label
                               htmlFor={`drawing-upload-${item.id}`}
-                              style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '6px', background: 'rgba(139,92,246,0.06)' }}
+                              className="text-xs font-semibold text-primary border border-primary/30 hover:border-primary/50 hover:bg-primary/5 rounded-lg py-1 px-3 transition-all duration-150 cursor-pointer"
                             >
                               + Upload PDF
                               <input
                                 id={`drawing-upload-${item.id}`}
                                 type="file"
                                 accept="application/pdf"
-                                style={{ display: 'none' }}
+                                className="hidden"
                                 onChange={e => {
                                   if (e.target.files[0]) handleDrawingUpload(item.id, e.target.files[0]);
                                   e.target.value = '';
@@ -2202,23 +2148,33 @@ export default function CRMHome() {
                           </div>
 
                           {drawingsLoading ? (
-                            <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Loading drawings…</p>
+                            <p className="text-xs text-muted">Loading drawings…</p>
                           ) : (itemDrawings[item.id] || []).length === 0 ? (
-                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>No drawings uploaded yet.</p>
+                            <p className="text-xs text-muted italic">No drawings uploaded yet.</p>
                           ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div className="flex flex-col gap-1.5">
                               {(itemDrawings[item.id] || []).map((drawing) => (
-                                <div key={drawing.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)', minWidth: 0 }}>
-                                  <span style={{ fontSize: '12px', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>📄 {drawing.file_name}</span>
-                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', flexShrink: 0 }}>{new Date(drawing.uploaded_at).toLocaleDateString()}</span>
-                                  <button type="button" onClick={() => openDrawingViewer(drawing)}
-                                    style={{ background: 'none', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '6px', color: 'var(--color-pending)', cursor: 'pointer', fontSize: '11px', fontWeight: '600', padding: '3px 8px', flexShrink: 0 }}>
+                                <div key={drawing.id} className="flex items-center gap-2 p-2 bg-background/20 rounded-lg border border-border min-w-0">
+                                  <span className="text-xs text-foreground truncate flex-1 min-w-0">📄 {drawing.file_name}</span>
+                                  <span className="text-[10px] text-muted shrink-0">{new Date(drawing.uploaded_at).toLocaleDateString()}</span>
+                                  <Button 
+                                    type="button" 
+                                    onClick={() => openDrawingViewer(drawing)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2.5 text-xs text-primary border-primary/20 hover:border-primary/40"
+                                  >
                                     View
-                                  </button>
-                                  <button type="button" onClick={() => handleDrawingDelete(drawing, item.id)}
-                                    style={{ background: 'none', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: 'var(--color-stale)', cursor: 'pointer', fontSize: '11px', fontWeight: '600', padding: '3px 8px', flexShrink: 0 }}>
+                                  </Button>
+                                  <Button 
+                                    type="button" 
+                                    onClick={() => handleDrawingDelete(drawing, item.id)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2.5 text-xs text-stale border-stale/20 hover:border-stale/45 hover:bg-stale/5"
+                                  >
                                     ✕
-                                  </button>
+                                  </Button>
                                 </div>
                               ))}
                             </div>
@@ -2230,10 +2186,11 @@ export default function CRMHome() {
                 })}
               </div>
 
-              <button 
+              <Button 
                 type="button" 
-                className="action-btn"
-                style={{ marginTop: '12px', padding: '8px 16px', fontSize: '13px', alignSelf: 'flex-start' }}
+                variant="secondary"
+                size="sm"
+                className="mt-3 self-start border border-border"
                 onClick={() => {
                   const updated = [...(selectedInquiry.inquiry_items || [])];
                   updated.push({
@@ -2259,14 +2216,13 @@ export default function CRMHome() {
                   });
                 }}
               >
-                <Plus size={16} /> Add Line Item
-              </button>
+                <Plus size={14} /> Add Line Item
+              </Button>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Category Type</label>
-              <select 
-                className="form-select"
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Category Type</label>
+              <Select 
                 value={selectedInquiry.category}
                 onChange={e => setSelectedInquiry({ ...selectedInquiry, category: e.target.value })}
               >
@@ -2275,80 +2231,66 @@ export default function CRMHome() {
                 <option value="fabrication">Fabrication</option>
                 <option value="investment">Investment Casting</option>
                 <option value="forging">Forging</option>
-              </select>
+              </Select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Inquiry Date</label>
-              <input 
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Inquiry Date</label>
+              <Input 
                 type="date" 
-                className="form-input" 
                 value={selectedInquiry.inquiry_date || ''}
                 disabled 
-                style={{ opacity: 0.6, cursor: 'not-allowed' }}
+                className="opacity-60 cursor-not-allowed"
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Client Contact Person</label>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Client Contact Person</label>
               <textarea 
-                className="form-textarea" 
+                className="flex min-h-[60px] w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground opacity-70 cursor-not-allowed resize-none"
                 value={selectedInquiry.customers?.client_contact_person || 'No contact person registered'}
                 disabled 
-                style={{ opacity: 0.7, cursor: 'not-allowed', minHeight: '60px' }}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label" style={{ color: 'var(--color-pending)', display: 'flex', justifyContent: 'space-between' }}>
-                Quotation Number 
-                {!selectedInquiry.quotation_number && <span style={{ fontSize: '11px', fontWeight: 'normal' }}>⚠️ Missing input</span>}
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-pending flex justify-between">
+                <span>Quotation Number</span> 
+                {!selectedInquiry.quotation_number && <span className="text-[10px] font-normal normal-case">⚠️ Missing input</span>}
               </label>
-              <input 
+              <Input 
                 type="text" 
-                className="form-input" 
                 placeholder="Enter quotation # (e.g. Q-2026-0099)" 
                 value={selectedInquiry.quotation_number || ''}
                 onChange={e => setSelectedInquiry({ ...selectedInquiry, quotation_number: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Currency</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Currency</label>
+              <div className="grid grid-cols-3 gap-2">
                 {[{ value: 'USD', label: '🇺🇸 USD', sub: 'US Dollar' }, { value: 'IDR', label: '🇮🇩 IDR', sub: 'Rupiah' }, { value: 'EUR', label: '🇪🇺 EUR', sub: 'Euro' }].map(opt => (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => setSelectedInquiry({ ...selectedInquiry, currency: opt.value })}
-                    style={{
-                      padding: '10px 8px',
-                      borderRadius: '8px',
-                      border: `2px solid ${(selectedInquiry.currency || 'USD') === opt.value ? 'var(--color-accent)' : 'var(--border-color)'}`,
-                      background: (selectedInquiry.currency || 'USD') === opt.value ? 'rgba(139,92,246,0.12)' : 'var(--input-bg)',
-                      color: (selectedInquiry.currency || 'USD') === opt.value ? 'var(--color-accent)' : 'var(--text-muted)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '2px',
-                      fontWeight: '700',
-                      fontSize: '13px',
-                      transition: 'all 0.15s ease'
-                    }}
+                    className={`p-2.5 rounded-lg border-2 flex flex-col items-center gap-0.5 font-bold text-xs transition-all duration-150 cursor-pointer ${
+                      (selectedInquiry.currency || 'USD') === opt.value
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-input text-muted hover:border-border/80 hover:text-foreground'
+                    }`}
                   >
                     {opt.label}
-                    <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.7 }}>{opt.sub}</span>
+                    <span className="text-[9px] font-normal opacity-70">{opt.sub}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Quotation Date</label>
-              <input 
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Quotation Date</label>
+              <Input 
                 type="date" 
-                className="form-input" 
                 value={selectedInquiry.quotation_date || ''}
                 onChange={e => {
                   const qDate = e.target.value;
@@ -2362,23 +2304,21 @@ export default function CRMHome() {
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Lead Time (Working Days)</label>
-              <input 
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Lead Time (Working Days)</label>
+              <Input 
                 type="number" 
-                className="form-input" 
                 placeholder="Calculated automatically from Quotation Date" 
                 disabled
-                style={{ cursor: 'not-allowed', opacity: 0.6, background: 'rgba(255,255,255,0.02)' }}
+                className="cursor-not-allowed opacity-60 bg-background/10"
                 value={selectedInquiry.lead_time_days || ''}
                 onChange={e => setSelectedInquiry({ ...selectedInquiry, lead_time_days: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Inquiry Status</label>
-              <select 
-                className="form-select"
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Inquiry Status</label>
+              <Select 
                 value={selectedInquiry.status}
                 onChange={e => {
                   const newStatus = e.target.value;
@@ -2398,26 +2338,25 @@ export default function CRMHome() {
                 <option value="Follow Up">Follow Up</option>
                 <option value="PO Won">PO Won</option>
                 <option value="Canceled">Canceled</option>
-              </select>
+              </Select>
             </div>
 
             {selectedInquiry.status === 'PO Won' && (
               <>
-                <div className="form-group">
-                  <label className="form-label">Purchase Order (PO) Number</label>
-                  <input 
+                <div className="flex flex-col gap-2 min-w-0">
+                  <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Purchase Order (PO) Number</label>
+                  <Input 
                     type="text" 
-                    className="form-input" 
                     placeholder="Enter PO # (e.g. PO-889922)" 
                     value={selectedInquiry.po_number || ''}
                     onChange={e => setSelectedInquiry({ ...selectedInquiry, po_number: e.target.value })}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Order Review Notes</label>
+                <div className="flex flex-col gap-2 min-w-0">
+                  <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Order Review Notes</label>
                   <textarea 
-                    className="form-textarea" 
+                    className="flex min-h-[80px] w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-all duration-200 resize-y"
                     placeholder="Enter details about PO alignment review..." 
                     value={selectedInquiry.order_review || ''}
                     onChange={e => setSelectedInquiry({ ...selectedInquiry, order_review: e.target.value })}
@@ -2426,106 +2365,111 @@ export default function CRMHome() {
               </>
             )}
 
-            <div className="form-group">
-              <label className="form-label">Follow-up Remarks / Notes</label>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Follow-up Remarks / Notes</label>
               <textarea 
-                className="form-textarea" 
+                className="flex min-h-[80px] w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-all duration-200 resize-y"
                 placeholder="Add latest activities or conversation notes..." 
                 value={selectedInquiry.remark || ''}
                 onChange={e => setSelectedInquiry({ ...selectedInquiry, remark: e.target.value })}
               />
             </div>
 
-            <div className="drawer-footer">
-              <button 
+            <div className="mt-6 pt-4 border-t border-border flex gap-3 shrink-0">
+              <Button 
                 type="button" 
-                className="cancel-btn" 
+                variant="outline" 
+                className="flex-1 h-11"
                 onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}
               >
                 Cancel
-              </button>
-              <button type="submit" className="save-btn">
+              </Button>
+              <Button type="submit" className="flex-1 bg-primary text-white h-11 hover:bg-primary/95">
                 Save Updates
-              </button>
+              </Button>
             </div>
           </form>
         )}
 
         {selectedInquiry && drawerMode === 'view' && (
-          <div className="drawer-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px' }}>
+          <div className="flex-grow overflow-y-auto overflow-x-hidden flex flex-col gap-5 w-full pr-1">
             {/* Overview Summary Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px' }}>
-                <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Inquiry Status</span>
-                {(() => {
-                  const aggStatus = getAggregateStatus(selectedInquiry);
-                  if (aggStatus === 'PO Won') return <span className="status-badge badge-won">PO Won</span>;
-                  if (aggStatus.startsWith('PO Won (')) return <span className="status-badge badge-partial-won">{aggStatus}</span>;
-                  if (aggStatus === 'Pending Quotation') return <span className="status-badge badge-pending">Pending Quotation</span>;
-                  if (aggStatus === 'Submitted') return <span className="status-badge badge-pending" style={{ color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'var(--color-accent-glow)' }}>Submitted</span>;
-                  if (aggStatus === 'Follow Up') return <span className="status-badge badge-follow">Follow Up</span>;
-                  if (aggStatus === 'Canceled') return <span className="status-badge badge-canceled">Canceled</span>;
-                  return <span className="status-badge badge-pending">{aggStatus}</span>;
-                })()}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-background/25 border border-border rounded-xl p-3 flex flex-col gap-2">
+                <span className="text-[10px] uppercase text-muted font-bold">Inquiry Status</span>
+                <div>
+                  {(() => {
+                    const aggStatus = getAggregateStatus(selectedInquiry);
+                    if (aggStatus === 'PO Won') return <Badge variant="won">PO Won</Badge>;
+                    if (aggStatus.startsWith('PO Won (')) return <Badge variant="won">{aggStatus}</Badge>;
+                    if (aggStatus === 'Pending Quotation') return <Badge variant="pending">Pending Quotation</Badge>;
+                    if (aggStatus === 'Submitted') return <Badge variant="pending" className="border-primary bg-primary/10 text-primary">Submitted</Badge>;
+                    if (aggStatus === 'Follow Up') return <Badge variant="follow">Follow Up</Badge>;
+                    if (aggStatus === 'Canceled') return <Badge variant="outline" className="text-muted/65 border-muted/20">Canceled</Badge>;
+                    return <Badge variant="pending">{aggStatus}</Badge>;
+                  })()}
+                </div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px' }}>
-                <span style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Category Type</span>
-                <span style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-main)', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'inline-block' }}>
-                  {selectedInquiry.category}
-                </span>
+              <div className="bg-background/25 border border-border rounded-xl p-3 flex flex-col gap-2">
+                <span className="text-[10px] uppercase text-muted font-bold">Category Type</span>
+                <div>
+                  <Badge variant="outline" className="text-xs uppercase font-bold border-border bg-card">
+                    {selectedInquiry.category}
+                  </Badge>
+                </div>
               </div>
             </div>
 
             {/* Date and Contact */}
-            <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '14px', border: '1px solid var(--border-color)', borderRadius: '12px', background: 'rgba(255,255,255,0.01)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px' }}>
+            <div className="bg-background/10 border border-border rounded-xl p-4 flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px', marginBottom: '2px' }}>Inquiry Date</span>
-                  <strong style={{ color: 'var(--text-main)' }}>{new Date(selectedInquiry.inquiry_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</strong>
+                  <span className="text-muted block text-[10px] uppercase font-semibold mb-0.5">Inquiry Date</span>
+                  <strong className="text-foreground">{new Date(selectedInquiry.inquiry_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px', marginBottom: '2px' }}>Client Contact Person</span>
-                  <strong style={{ color: 'var(--text-main)' }}>{selectedInquiry.customers?.client_contact_person || 'No contact registered'}</strong>
+                  <span className="text-muted block text-[10px] uppercase font-semibold mb-0.5">Client Contact Person</span>
+                  <strong className="text-foreground">{selectedInquiry.customers?.client_contact_person || 'No contact registered'}</strong>
                 </div>
               </div>
             </div>
 
             {/* Quotation Info */}
-            <div style={{ background: 'rgba(139, 92, 246, 0.04)', border: '1px solid rgba(139, 92, 246, 0.15)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <h3 style={{ fontSize: '13px', color: 'var(--color-accent)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid rgba(139, 92, 246, 0.1)', paddingBottom: '6px' }}>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col gap-3">
+              <h3 className="text-xs text-primary font-bold uppercase tracking-wider border-b border-primary/10 pb-1.5 flex items-center gap-1.5">
                 📄 Quotation Details
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '12px', fontSize: '13px' }}>
+              <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Quotation Number</span>
-                  <span style={{ fontWeight: '600', color: selectedInquiry.quotation_number ? 'var(--text-main)' : 'var(--color-pending)' }}>
+                  <span className="text-muted block text-[10px] uppercase font-semibold mb-0.5">Quotation Number</span>
+                  <span className={`font-semibold ${selectedInquiry.quotation_number ? 'text-foreground' : 'text-pending'}`}>
                     {selectedInquiry.quotation_number || 'Waiting Input'}
                   </span>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Quotation Date</span>
-                  <span style={{ fontWeight: '500', color: 'var(--text-main)' }}>
+                  <span className="text-muted block text-[10px] uppercase font-semibold mb-0.5">Quotation Date</span>
+                  <span className="font-medium text-foreground">
                     {selectedInquiry.quotation_date ? new Date(selectedInquiry.quotation_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
                   </span>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Lead Time</span>
-                  <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                  <span className="text-muted block text-[10px] uppercase font-semibold mb-0.5">Lead Time</span>
+                  <span className="font-semibold text-foreground">
                     {selectedInquiry.quotation_number ? `${selectedInquiry.lead_time_days || '-'} working days` : `${getDaysOpen(selectedInquiry.inquiry_date)} days open`}
                   </span>
                 </div>
               </div>
               
               {selectedInquiry.status === 'PO Won' && selectedInquiry.po_number && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', borderTop: '1px solid rgba(139, 92, 246, 0.1)', paddingTop: '10px', fontSize: '13px' }}>
+                <div className="grid grid-cols-1 gap-2 border-t border-primary/10 pt-2.5 text-sm">
                   <div>
-                    <span style={{ color: 'var(--color-won)', display: 'block', fontSize: '11px', fontWeight: '600' }}>🏆 Won Purchase Order (PO) Number</span>
-                    <strong style={{ color: 'var(--color-won)', fontSize: '15px' }}>{selectedInquiry.po_number}</strong>
+                    <span className="text-won block text-[10px] uppercase font-bold">🏆 Won Purchase Order (PO) Number</span>
+                    <strong className="text-won text-base">{selectedInquiry.po_number}</strong>
                   </div>
                   {selectedInquiry.order_review && (
-                    <div style={{ marginTop: '4px', background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.15)', borderRadius: '8px', padding: '10px' }}>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px', textTransform: 'uppercase', marginBottom: '2px' }}>Order Review Notes</span>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-main)', fontStyle: 'italic', lineHeight: '1.4' }}>{selectedInquiry.order_review}</p>
+                    <div className="mt-1 p-3 bg-won/5 border border-won/10 rounded-lg">
+                      <span className="text-muted block text-[9px] uppercase font-bold mb-1">Order Review Notes</span>
+                      <p className="m-0 text-xs text-foreground italic leading-relaxed">{selectedInquiry.order_review}</p>
                     </div>
                   )}
                 </div>
@@ -2534,12 +2478,12 @@ export default function CRMHome() {
 
             {/* Line Items View */}
             <div>
-              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px', marginBottom: '12px' }}>
-                <span style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '13px' }}>📋 Inquiry Line Items</span>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{(selectedInquiry.inquiry_items || []).length} item(s)</span>
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted flex justify-between border-b border-border pb-1.5 mb-3">
+                <span className="font-extrabold text-foreground text-xs">📋 Inquiry Line Items</span>
+                <span>{(selectedInquiry.inquiry_items || []).length} item(s)</span>
               </label>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="flex flex-col gap-3">
                 {(selectedInquiry.inquiry_items || []).map((item, index) => {
                   const cast = parseFloat(item.cast_price) || 0;
                   const mach = parseFloat(item.mach_price) || 0;
@@ -2552,77 +2496,53 @@ export default function CRMHome() {
                   const currencySym = selectedInquiry.currency === 'USD' ? '$' : selectedInquiry.currency === 'EUR' ? '€' : 'Rp';
 
                   return (
-                    <div key={index} style={{ 
-                      background: 'rgba(255, 255, 255, 0.01)', 
-                      padding: '16px', 
-                      borderRadius: '12px', 
-                      border: '1px solid var(--border-color)', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: '12px' 
-                    }}>
+                    <div key={index} className="bg-background/20 p-4 rounded-xl border border-border flex flex-col gap-3">
                       {/* Name & Basic Info */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div className="flex justify-between items-start gap-2">
                         <div>
-                          <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
+                          <h4 className="text-sm font-bold text-foreground m-0">
                             {index + 1}. {item.item_name || 'Unnamed Item'}
                           </h4>
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '11px', textTransform: 'uppercase', fontWeight: '500' }}>
-                            {item.material && <span style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '2px 6px' }}>🧪 {item.material}</span>}
-                            {item.process && <span style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '2px 6px' }}>⚙️ {item.process}</span>}
-                            {item.tipe_proses && <span style={{ background: 'rgba(139,92,246,0.08)', color: 'var(--color-accent)', border: '1px solid rgba(139,92,246,0.15)', borderRadius: '4px', padding: '2px 6px' }}>🏷️ {item.tipe_proses}</span>}
+                          <div className="flex flex-wrap gap-1.5 mt-1.5 text-[10px] uppercase font-semibold">
+                            {item.material && <span className="bg-card border border-border rounded px-2 py-0.5">🧪 {item.material}</span>}
+                            {item.process && <span className="bg-card border border-border rounded px-2 py-0.5">⚙️ {item.process}</span>}
+                            {item.tipe_proses && <span className="bg-primary/10 text-primary border border-primary/20 rounded px-2 py-0.5">🏷️ {item.tipe_proses}</span>}
                           </div>
                         </div>
-                        <span className="status-badge" style={{
-                          background: item.status === 'PO Won' ? 'var(--color-won-glow)' : item.status === 'Canceled' ? 'var(--color-stale-glow)' : item.status === 'Follow Up' ? 'var(--color-follow-glow)' : 'rgba(255,255,255,0.04)',
-                          color: item.status === 'PO Won' ? 'var(--color-won)' : item.status === 'Canceled' ? 'var(--color-stale)' : item.status === 'Follow Up' ? 'var(--color-follow)' : 'var(--text-muted)',
-                          fontWeight: '600'
-                        }}>
+                        <Badge variant={item.status === 'PO Won' ? 'won' : item.status === 'Canceled' ? 'outline' : item.status === 'Follow Up' ? 'follow' : 'pending'}>
                           {item.status || 'Pending Quotation'}
-                        </span>
+                        </Badge>
                       </div>
 
                       {/* Financial / Qty Summary */}
-                      <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: '1fr 1fr 1fr', 
-                        gap: '12px', 
-                        background: 'rgba(255, 255, 255, 0.02)', 
-                        padding: '10px 14px', 
-                        borderRadius: '8px', 
-                        fontSize: '12px',
-                        border: '1px solid rgba(255, 255, 255, 0.02)'
-                      }}>
+                      <div className="grid grid-cols-3 gap-3 bg-background/15 p-2.5 rounded-lg border border-border/20 text-xs">
                         <div>
-                          <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Quantity</span>
-                          <strong style={{ color: 'var(--text-main)', fontSize: '13px' }}>📦 {quantity.toLocaleString()} pcs</strong>
+                          <span className="text-muted block text-[9px] uppercase font-bold mb-0.5">Quantity</span>
+                          <strong className="text-foreground text-[13px]">📦 {quantity.toLocaleString()} pcs</strong>
                         </div>
                         <div>
-                          <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Price / Qty</span>
-                          <strong style={{ color: 'var(--text-main)', fontSize: '13px' }}>{currencySym} {liveTotalPerQty.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                          <span className="text-muted block text-[9px] uppercase font-bold mb-0.5">Price / Qty</span>
+                          <strong className="text-foreground text-[13px]">{currencySym} {liveTotalPerQty.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                         </div>
                         <div>
-                          <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Total Price</span>
-                          <strong style={{ color: 'var(--color-won)', fontSize: '13px' }}>{currencySym} {liveTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                          <span className="text-muted block text-[9px] uppercase font-bold mb-0.5">Total Price</span>
+                          <strong className="text-won text-[13px]">{currencySym} {liveTotalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                         </div>
                       </div>
 
                       {/* Tooling and FAI section if relevant */}
                       {(item.tooling_cost || (item.fai_status && item.fai_status !== 'Pending')) && (
-                        <div style={{ display: 'grid', gridTemplateColumns: item.tooling_cost ? '1fr 1.5fr' : '1fr', gap: '12px', fontSize: '12px', borderTop: '1px dashed var(--border-color)', paddingTop: '8px' }}>
+                        <div className={`grid gap-3 text-xs border-t border-dashed border-border pt-2 mt-0.5 ${item.tooling_cost ? 'grid-cols-[1fr_1.5fr]' : 'grid-cols-1'}`}>
                           {item.tooling_cost && (
                             <div>
-                              <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Tooling Cost</span>
-                              <strong style={{ color: 'var(--text-main)' }}>{currencySym} {parseFloat(item.tooling_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
+                              <span className="text-muted block text-[9px] uppercase font-bold mb-0.5">Tooling Cost</span>
+                              <strong className="text-foreground">{currencySym} {parseFloat(item.tooling_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
                             </div>
                           )}
                           {item.fai_status && item.fai_status !== 'Pending' && (
                             <div>
-                              <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '10px' }}>Product Engineering FAI Status</span>
-                              <span style={{ 
-                                fontWeight: '700', 
-                                color: item.fai_status === 'Approved' ? 'var(--color-won)' : item.fai_status === 'Rejected' ? 'var(--color-stale)' : 'var(--color-follow)'
-                              }}>
+                              <span className="text-muted block text-[9px] uppercase font-bold mb-0.5">Product Engineering FAI Status</span>
+                              <span className={`font-bold ${item.fai_status === 'Approved' ? 'text-won' : item.fai_status === 'Rejected' ? 'text-stale' : 'text-follow'}`}>
                                 {item.fai_status === 'Approved' ? '✓ Qualified / Approved' : item.fai_status === 'In Progress' ? '⚙️ In Progress / Trial' : `✗ Rejected`}
                               </span>
                             </div>
@@ -2632,16 +2552,21 @@ export default function CRMHome() {
 
                       {/* Drawings list (View-only) */}
                       {item.id && (itemDrawings[item.id] || []).length > 0 && (
-                        <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-accent)', display: 'block' }}>📎 Uploaded Technical Drawings:</span>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div className="border-t border-dashed border-border pt-2.5 mt-0.5 flex flex-col gap-1.5">
+                          <span className="text-[10px] uppercase font-bold text-primary block">📎 Technical Drawings:</span>
+                          <div className="flex flex-col gap-1">
                             {(itemDrawings[item.id] || []).map((drawing) => (
-                              <div key={drawing.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.01)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                                <span style={{ fontSize: '11px', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>📄 {drawing.file_name}</span>
-                                <button type="button" onClick={() => openDrawingViewer(drawing)}
-                                  style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '4px', color: 'var(--color-pending)', cursor: 'pointer', fontSize: '10px', fontWeight: '700', padding: '2px 8px' }}>
+                              <div key={drawing.id} className="flex items-center justify-between p-2 bg-background/10 rounded-lg border border-border gap-2">
+                                <span className="text-xs text-foreground truncate flex-1 min-w-0">📄 {drawing.file_name}</span>
+                                <Button 
+                                  type="button" 
+                                  onClick={() => openDrawingViewer(drawing)}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-6 py-0.5 px-2 text-[10px] font-bold text-primary border border-primary/20 hover:border-primary/45"
+                                >
                                   Open PDF
-                                </button>
+                                </Button>
                               </div>
                             ))}
                           </div>
@@ -2655,41 +2580,44 @@ export default function CRMHome() {
 
             {/* General Remarks */}
             {selectedInquiry.remark && (
-              <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '14px' }}>
-                <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Follow-up Remarks / Activities</span>
-                <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-main)', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{selectedInquiry.remark}</p>
+              <div className="bg-background/10 border border-border rounded-xl p-4 flex flex-col gap-1.5">
+                <span className="text-[10px] uppercase text-muted font-bold">Follow-up Remarks / Activities</span>
+                <p className="m-0 text-xs text-foreground whitespace-pre-wrap leading-relaxed">{selectedInquiry.remark}</p>
               </div>
             )}
 
             {/* Drawer Footer View Only */}
-            <div className="drawer-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '12px' }}>
-              <button 
+            <div className="mt-6 pt-4 border-t border-border flex shrink-0">
+              <Button 
                 type="button" 
-                className="cancel-btn" 
-                style={{ width: '100%', padding: '12px', fontSize: '13px', fontWeight: '700', background: 'rgba(255,255,255,0.04)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
+                variant="outline"
+                className="w-full h-11 bg-card/50 hover:bg-card-hover text-foreground font-bold text-xs"
                 onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}
               >
                 Close Meeting Review
-              </button>
+              </Button>
             </div>
           </div>
         )}
       </div>
 
       {/* 4. MODAL POPUP: ADD INQUIRY */}
-      <div className={`modal-overlay ${isAddInquiryOpen ? 'open' : ''}`}>
-        <div className="modal">
-          <div className="modal-header">
-            <h2 className="modal-title">Log New Inquiry</h2>
-            <button className="modal-close" onClick={() => setIsAddInquiryOpen(false)}>
-              <X size={20} />
+      <div className={`fixed inset-0 bg-black/60 backdrop-blur-md z-[1002] flex items-center justify-center transition-opacity duration-250 ${isAddInquiryOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`w-[500px] max-w-[92vw] bg-sidebar border border-border rounded-2xl shadow-2xl flex flex-col p-6 md:p-8 overflow-x-hidden transition-all duration-250 ease-in-out ${isAddInquiryOpen ? 'translate-y-0 opacity-100' : '-translate-y-5 opacity-0'}`}>
+          <div className="flex items-center justify-between border-b border-border pb-4 mb-5 flex-shrink-0">
+            <h2 className="text-lg font-bold text-foreground">Log New Inquiry</h2>
+            <button 
+              type="button"
+              className="bg-transparent border-none text-muted hover:text-foreground cursor-pointer transition-colors p-1.5 rounded-full hover:bg-card-hover"
+              onClick={() => setIsAddInquiryOpen(false)}
+            >
+              <X size={18} />
             </button>
           </div>
-          <form className="modal-body" onSubmit={handleAddInquiry}>
-            <div className="form-group">
-              <label className="form-label">Select Customer</label>
-              <select 
-                className="form-select"
+          <form className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 w-full box-border" onSubmit={handleAddInquiry}>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Select Customer</label>
+              <Select 
                 required
                 value={newInquiry.customer_id}
                 onChange={e => setNewInquiry({ ...newInquiry, customer_id: e.target.value })}
@@ -2698,13 +2626,12 @@ export default function CRMHome() {
                 {customers.map(c => (
                   <option key={c.id} value={c.id}>{c.company_name} (PIC: {c.pic_name})</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Inquiry Category</label>
-              <select 
-                className="form-select"
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Inquiry Category</label>
+              <Select 
                 value={newInquiry.category}
                 onChange={e => setNewInquiry({ ...newInquiry, category: e.target.value })}
               >
@@ -2713,19 +2640,18 @@ export default function CRMHome() {
                 <option value="fabrication">Fabrication</option>
                 <option value="investment">Investment Casting</option>
                 <option value="forging">Forging</option>
-              </select>
+              </Select>
             </div>
 
             {/* Line Items Section */}
-            <div className="form-group" style={{ marginTop: '8px' }}>
-              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+            <div className="flex flex-col gap-2 min-w-0 mt-2">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted flex justify-between border-b border-border pb-1.5">
                 <span>Line Items</span>
-                <span style={{ fontSize: '11px', textTransform: 'none', color: 'var(--text-muted)' }}>{newInquiry.items.length} item(s)</span>
+                <span className="normal-case font-normal">{newInquiry.items.length} item(s)</span>
               </label>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
+              <div className="flex flex-col gap-4 mt-3">
                 {newInquiry.items.map((item, index) => {
-                  // Live calculations for display
                   const cast = parseFloat(item.cast_price) || 0;
                   const mach = parseFloat(item.mach_price) || 0;
                   const surf = parseFloat(item.surface_treatment) || 0;
@@ -2738,13 +2664,13 @@ export default function CRMHome() {
                   const isExpanded = item.showDetails;
 
                   return (
-                    <div key={index} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-accent)' }}>Item #{index + 1}</span>
+                    <div key={index} className="bg-background/25 p-4 rounded-xl border border-border flex flex-col gap-3 relative">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-primary">Item #{index + 1}</span>
                         {newInquiry.items.length > 1 && (
                           <button 
                             type="button" 
-                            style={{ background: 'none', border: 'none', color: 'var(--color-stale)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
+                            className="bg-transparent border-none text-stale hover:text-stale/80 cursor-pointer flex items-center gap-1 text-xs"
                             onClick={() => {
                               const updated = newInquiry.items.filter((_, idx) => idx !== index);
                               setNewInquiry({ ...newInquiry, items: updated });
@@ -2755,12 +2681,11 @@ export default function CRMHome() {
                         )}
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>Item / Product Name *</label>
-                          <input 
+                      <div className="grid grid-cols-[2fr_1fr] gap-3">
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Item / Product Name *</label>
+                          <Input 
                             type="text" 
-                            className="form-input" 
                             placeholder="e.g. Pump Housing DN150" 
                             required
                             value={item.item_name}
@@ -2771,11 +2696,10 @@ export default function CRMHome() {
                             }}
                           />
                         </div>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>Qty *</label>
-                          <input 
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Qty *</label>
+                          <Input 
                             type="number" 
-                            className="form-input" 
                             placeholder="Qty" 
                             required
                             min="1"
@@ -2789,12 +2713,11 @@ export default function CRMHome() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>Material</label>
-                          <input 
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Material</label>
+                          <Input 
                             type="text" 
-                            className="form-input" 
                             placeholder="e.g. AISI 316" 
                             value={item.material || ''}
                             onChange={e => {
@@ -2804,11 +2727,10 @@ export default function CRMHome() {
                             }}
                           />
                         </div>
-                        <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>Process</label>
-                          <input 
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Process</label>
+                          <Input 
                             type="text" 
-                            className="form-input" 
                             placeholder="e.g. Casting + Machining" 
                             value={item.process || ''}
                             onChange={e => {
@@ -2820,10 +2742,10 @@ export default function CRMHome() {
                         </div>
                       </div>
 
-                      <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '10px', marginTop: '4px' }}>
+                      <div className="border-t border-dashed border-border pt-2 mt-1">
                         <button
                           type="button"
-                          style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: '600', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          className="bg-transparent border-none text-primary hover:text-primary/80 cursor-pointer font-semibold text-xs flex items-center gap-1"
                           onClick={() => {
                             const updated = [...newInquiry.items];
                             updated[index].showDetails = !updated[index].showDetails;
@@ -2835,13 +2757,11 @@ export default function CRMHome() {
                       </div>
 
                       {isExpanded && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '6px', padding: '12px', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '11px' }}>Tipe Proses</label>
-                              <select 
-                                className="form-select"
-                                style={{ padding: '8px' }}
+                        <div className="flex flex-col gap-3 mt-1.5 p-3 bg-background/10 rounded-lg border border-border/20">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Tipe Proses</label>
+                              <Select 
                                 value={item.tipe_proses || ''}
                                 onChange={e => {
                                   const updated = [...newInquiry.items];
@@ -2855,14 +2775,12 @@ export default function CRMHome() {
                                 <option value="INVESTMENT CASTING">Investment Casting</option>
                                 <option value="FORGING">Forging</option>
                                 <option value="others">Others</option>
-                              </select>
+                              </Select>
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '11px' }}>Tooling Cost</label>
-                              <input 
+                            <div className="flex flex-col gap-2 min-w-0">
+                              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Tooling Cost</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '8px' }}
                                 placeholder="0.00" 
                                 value={item.tooling_cost || ''}
                                 onChange={e => {
@@ -2874,13 +2792,12 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>Cast Price</label>
-                              <input 
+                          <div className="grid grid-cols-5 gap-1.5">
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Cast Price</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.cast_price || ''}
                                 onChange={e => {
@@ -2890,12 +2807,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>Mach Price</label>
-                              <input 
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Mach Price</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.mach_price || ''}
                                 onChange={e => {
@@ -2905,12 +2821,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>Surface Trt.</label>
-                              <input 
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Surface Trt.</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.surface_treatment || ''}
                                 onChange={e => {
@@ -2920,12 +2835,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>Packing Cost</label>
-                              <input 
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Packing Cost</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.packing_cost || ''}
                                 onChange={e => {
@@ -2935,12 +2849,11 @@ export default function CRMHome() {
                                 }}
                               />
                             </div>
-                            <div className="form-group">
-                              <label className="form-label" style={{ fontSize: '9px' }}>CFR</label>
-                              <input 
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">CFR</label>
+                              <Input 
                                 type="number" 
-                                className="form-input" 
-                                style={{ padding: '6px', fontSize: '12px' }}
+                                className="h-8 px-2 text-xs"
                                 placeholder="0" 
                                 value={item.cfr || ''}
                                 onChange={e => {
@@ -2952,14 +2865,14 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', fontSize: '12px' }}>
+                          <div className="flex justify-between border-t border-border/40 pt-2 text-xs">
                             <div>
-                              <span style={{ color: 'var(--text-muted)' }}>Total / Qty: </span>
-                              <strong style={{ color: 'var(--text-main)' }}>{liveTotalPerQty.toFixed(2)}</strong>
+                              <span className="text-muted">Total / Qty: </span>
+                              <strong className="text-foreground">{liveTotalPerQty.toFixed(2)}</strong>
                             </div>
                             <div>
-                              <span style={{ color: 'var(--text-muted)' }}>Total Price: </span>
-                              <strong style={{ color: 'var(--color-won)' }}>{liveTotalPrice.toFixed(2)}</strong>
+                              <span className="text-muted">Total Price: </span>
+                              <strong className="text-won">{liveTotalPrice.toFixed(2)}</strong>
                             </div>
                           </div>
                         </div>
@@ -2969,10 +2882,11 @@ export default function CRMHome() {
                 })}
               </div>
 
-              <button 
+              <Button 
                 type="button" 
-                className="action-btn"
-                style={{ marginTop: '12px', padding: '8px 16px', fontSize: '13px', alignSelf: 'flex-start' }}
+                variant="secondary"
+                size="sm"
+                className="mt-3 self-start border border-border"
                 onClick={() => {
                   const updated = [...newInquiry.items];
                   updated.push({
@@ -2992,96 +2906,87 @@ export default function CRMHome() {
                   setNewInquiry({ ...newInquiry, items: updated });
                 }}
               >
-                <Plus size={16} /> Add Line Item
-              </button>
+                <Plus size={14} /> Add Line Item
+              </Button>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Quotation Number (Optional)</label>
-              <input 
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Quotation Number (Optional)</label>
+              <Input 
                 type="text" 
-                className="form-input" 
                 placeholder="Can be inputted later" 
                 value={newInquiry.quotation_number}
                 onChange={e => setNewInquiry({ ...newInquiry, quotation_number: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Currency</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Currency</label>
+              <div className="grid grid-cols-3 gap-2">
                 {[{ value: 'USD', label: '🇺🇸 USD', sub: 'US Dollar' }, { value: 'IDR', label: '🇮🇩 IDR', sub: 'Rupiah' }, { value: 'EUR', label: '🇪🇺 EUR', sub: 'Euro' }].map(opt => (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => setNewInquiry({ ...newInquiry, currency: opt.value })}
-                    style={{
-                      padding: '10px 8px',
-                      borderRadius: '8px',
-                      border: `2px solid ${(newInquiry.currency || 'USD') === opt.value ? 'var(--color-accent)' : 'var(--border-color)'}`,
-                      background: (newInquiry.currency || 'USD') === opt.value ? 'rgba(139,92,246,0.12)' : 'var(--input-bg)',
-                      color: (newInquiry.currency || 'USD') === opt.value ? 'var(--color-accent)' : 'var(--text-muted)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '2px',
-                      fontWeight: '700',
-                      fontSize: '13px',
-                      transition: 'all 0.15s ease'
-                    }}
+                    className={`p-2.5 rounded-lg border-2 flex flex-col items-center gap-0.5 font-bold text-xs transition-all duration-150 cursor-pointer ${
+                      (newInquiry.currency || 'USD') === opt.value
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-input text-muted hover:border-border/80 hover:text-foreground'
+                    }`}
                   >
                     {opt.label}
-                    <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.7 }}>{opt.sub}</span>
+                    <span className="text-[9px] font-normal opacity-70">{opt.sub}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Est. Lead Time (Working Days)</label>
-              <input 
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Est. Lead Time (Working Days)</label>
+              <Input 
                 type="number" 
-                className="form-input" 
                 placeholder="e.g. 5" 
                 value={newInquiry.lead_time_days}
                 onChange={e => setNewInquiry({ ...newInquiry, lead_time_days: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Initial Remarks</label>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Initial Remarks</label>
               <textarea 
-                className="form-textarea" 
+                className="flex min-h-[100px] w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-all duration-200 resize-y"
                 placeholder="Enter initial context or demands..." 
                 value={newInquiry.remark}
                 onChange={e => setNewInquiry({ ...newInquiry, remark: e.target.value })}
               />
             </div>
 
-            <div className="modal-footer">
-              <button type="button" className="cancel-btn" onClick={() => setIsAddInquiryOpen(false)}>Cancel</button>
-              <button type="submit" className="save-btn">Log Inquiry</button>
+            <div className="mt-6 pt-4 border-t border-border flex gap-3 shrink-0">
+              <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setIsAddInquiryOpen(false)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-primary text-white h-11 hover:bg-primary/95">Log Inquiry</Button>
             </div>
           </form>
         </div>
       </div>
 
       {/* 5. MODAL POPUP: ADD CUSTOMER */}
-      <div className={`modal-overlay ${isAddCustomerOpen ? 'open' : ''}`}>
-        <div className="modal">
-          <div className="modal-header">
-            <h2 className="modal-title">Register New Customer</h2>
-            <button className="modal-close" onClick={() => setIsAddCustomerOpen(false)}>
-              <X size={20} />
+      <div className={`fixed inset-0 bg-black/60 backdrop-blur-md z-[1002] flex items-center justify-center transition-opacity duration-250 ${isAddCustomerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`w-[500px] max-w-[92vw] bg-sidebar border border-border rounded-2xl shadow-2xl flex flex-col p-6 md:p-8 overflow-x-hidden transition-all duration-250 ease-in-out ${isAddCustomerOpen ? 'translate-y-0 opacity-100' : '-translate-y-5 opacity-0'}`}>
+          <div className="flex items-center justify-between border-b border-border pb-4 mb-5 flex-shrink-0">
+            <h2 className="text-lg font-bold text-foreground">Register New Customer</h2>
+            <button 
+              type="button"
+              className="bg-transparent border-none text-muted hover:text-foreground cursor-pointer transition-colors p-1.5 rounded-full hover:bg-card-hover"
+              onClick={() => setIsAddCustomerOpen(false)}
+            >
+              <X size={18} />
             </button>
           </div>
-          <form className="modal-body" onSubmit={handleAddCustomer}>
-            <div className="form-group">
-              <label className="form-label">Company Name</label>
-              <input 
+          <form className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 w-full box-border" onSubmit={handleAddCustomer}>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Company Name</label>
+              <Input 
                 type="text" 
-                className="form-input" 
                 placeholder="e.g. BOSCH AUTO SVC" 
                 required
                 value={newCustomer.company_name}
@@ -3089,63 +2994,59 @@ export default function CRMHome() {
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Sector Business</label>
-              <input 
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Sector Business</label>
+              <Input 
                 type="text" 
-                className="form-input" 
                 placeholder="e.g. Automotive, Manufacturing" 
                 value={newCustomer.sector_business}
                 onChange={e => setNewCustomer({ ...newCustomer, sector_business: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Regional</label>
-              <input 
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Regional</label>
+              <Input 
                 type="text" 
-                className="form-input" 
                 placeholder="e.g. Asia, North America, Europe" 
                 value={newCustomer.regional}
                 onChange={e => setNewCustomer({ ...newCustomer, regional: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Primary Email Address</label>
-              <input 
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Primary Email Address</label>
+              <Input 
                 type="email" 
-                className="form-input" 
                 placeholder="customer@email.com" 
                 value={newCustomer.email_address}
                 onChange={e => setNewCustomer({ ...newCustomer, email_address: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Company Full Address</label>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Company Full Address</label>
               <textarea 
-                className="form-textarea" 
+                className="flex min-h-[100px] w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-all duration-200 resize-y"
                 placeholder="Enter postal street address..." 
                 value={newCustomer.address}
                 onChange={e => setNewCustomer({ ...newCustomer, address: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Client Contact Person</label>
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Client Contact Person</label>
               <textarea 
-                className="form-textarea" 
+                className="flex min-h-[100px] w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-all duration-200 resize-y"
                 placeholder="e.g. Pak Wafi, +62 812..." 
                 value={newCustomer.client_contact_person || ''}
                 onChange={e => setNewCustomer({ ...newCustomer, client_contact_person: e.target.value })}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Assigned PIC</label>
-              <select 
-                className="form-select"
+            <div className="flex flex-col gap-2 min-w-0">
+              <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Assigned PIC</label>
+              <Select 
                 required
                 value={newCustomer.pic_name}
                 onChange={e => setNewCustomer({ ...newCustomer, pic_name: e.target.value })}
@@ -3156,12 +3057,12 @@ export default function CRMHome() {
                 <option value="NOVY">NOVY</option>
                 <option value="ERVAN">ERVAN</option>
                 <option value="RANU">RANU</option>
-              </select>
+              </Select>
             </div>
 
-            <div className="modal-footer">
-              <button type="button" className="cancel-btn" onClick={() => setIsAddCustomerOpen(false)}>Cancel</button>
-              <button type="submit" className="save-btn">Add Customer</button>
+            <div className="mt-6 pt-4 border-t border-border flex gap-3 shrink-0">
+              <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setIsAddCustomerOpen(false)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-primary text-white h-11 hover:bg-primary/95">Add Customer</Button>
             </div>
           </form>
         </div>
@@ -3170,40 +3071,43 @@ export default function CRMHome() {
       {/* ── PDF DRAWING VIEWER MODAL ── */}
       {viewerDrawing && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 2000, display: 'flex', flexDirection: 'column' }}
+          className="fixed inset-0 bg-black/90 z-[2000] flex flex-col"
           onClick={e => { if (e.target === e.currentTarget) closeDrawingViewer(); }}
         >
           {/* Header bar */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: 'var(--bg-sidebar)', borderBottom: '1px solid var(--border-color)', flexShrink: 0, gap: '16px' }}>
-            <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+          <div className="flex items-center justify-between px-6 py-3 bg-sidebar border-b border-border gap-4 shrink-0">
+            <span className="font-bold text-sm text-foreground truncate min-w-0">
               📄 {viewerDrawing.file_name}
             </span>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
+            <div className="flex gap-3 items-center shrink-0">
               {viewerUrl && (
                 <a href={viewerUrl} target="_blank" rel="noreferrer"
-                  style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-accent)', textDecoration: 'none', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '8px', padding: '6px 14px' }}>
+                  className="text-xs font-semibold text-primary border border-primary/30 hover:border-primary/50 hover:bg-primary/5 rounded-lg py-1.5 px-3.5 transition-all">
                   ↓ Download
                 </a>
               )}
-              <button onClick={closeDrawingViewer}
-                style={{ background: 'none', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px 14px', fontSize: '20px', lineHeight: 1 }}>
+              <button 
+                type="button"
+                className="bg-transparent border border-border hover:bg-card-hover text-muted hover:text-foreground cursor-pointer rounded-lg py-1 px-3 text-lg leading-none transition-all"
+                onClick={closeDrawingViewer}
+              >
                 ×
               </button>
             </div>
           </div>
 
           {/* Viewer body */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', minHeight: 0 }}>
+          <div className="flex-1 flex items-center justify-center p-6 min-h-0">
             {viewerLoading ? (
-              <div style={{ color: 'var(--text-muted)', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '40px', height: '40px', border: '3px solid var(--border-color)', borderTopColor: 'var(--color-accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div className="text-muted text-sm flex flex-col items-center gap-4">
+                <div className="w-10 h-10 border-3 border-border border-t-primary rounded-full animate-spin" />
                 Loading drawing…
               </div>
             ) : viewerUrl ? (
               <iframe src={viewerUrl} title={viewerDrawing.file_name}
-                style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px', background: '#fff' }} />
+                className="w-full h-full border-0 rounded-lg bg-white" />
             ) : (
-              <p style={{ color: 'var(--color-stale)' }}>Failed to load drawing.</p>
+              <p className="text-stale">Failed to load drawing.</p>
             )}
           </div>
         </div>
