@@ -2,8 +2,13 @@ import './globals.css';
 import { ThemeProvider } from '../components/theme-provider';
 
 export const metadata = {
-  title: 'CRM - Inquiry Handling System',
-  description: 'A premium dashboard to manage corporate inquiries, quotation records, and client follow-ups.',
+  title: 'Banhandy CRM — Inquiry & Visit Management',
+  description: 'Precision engineering CRM for managing inquiries, quotations, customer visits and meeting minutes.',
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({ children }) {
