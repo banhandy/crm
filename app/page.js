@@ -681,10 +681,39 @@ export default function CRMHome() {
       }
 
       setIsDrawerOpen(false);
-      setSelectedInquiry(null);
-      fetchData();
+      setSelectedInquiry(null);      fetchData();
     } catch (err) {
       alert('Error updating inquiry: ' + err.message);
+    }
+  };
+
+  // Action: Update customer visit status
+  const handleUpdateVisitStatus = async (visitId, newStatus) => {
+    try {
+      const { error } = await supabase
+        .from('customer_visits')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', visitId);
+      if (error) throw error;
+    } catch (err) {
+      alert("Error updating visit status: " + err.message);
+    }
+  };
+
+  // Action: Download meeting minutes attachment from Storage
+  const downloadMinutes = async (filePath, fileName) => {
+    try {
+      const { data, error } = await supabase.storage.from('drawings').download(filePath);
+      if (error) throw error;
+      const url = window.URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      alert("Download error: " + err.message);
     }
   };
 
@@ -954,6 +983,7 @@ export default function CRMHome() {
               { id: 'dashboard', name: 'Dashboard Analytics', icon: LayoutDashboard },
               { id: 'inquiries', name: 'Inquiries Pipeline', icon: FileText },
               { id: 'customers', name: 'Customer Contact', icon: Users },
+              { id: 'visits', name: 'Visits & Activity', icon: Calendar },
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -1011,6 +1041,7 @@ export default function CRMHome() {
           { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
           { id: 'inquiries', name: 'Pipeline', icon: FileText },
           { id: 'customers', name: 'Contact', icon: Users },
+          { id: 'visits', name: 'Visits', icon: Calendar },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1045,12 +1076,18 @@ export default function CRMHome() {
               {activeTab === 'dashboard' && '📊 Dashboard Analytics'}
               {activeTab === 'inquiries' && '📁 Inquiries Pipeline'}
               {activeTab === 'customers' && '👥 Customer Directory'}
+              {activeTab === 'visits' && '📅 Visit Activity Log'}
             </h1>
           </div>
           <div className="flex gap-3">
             {activeTab === 'customers' && (
               <Button onClick={() => setIsAddCustomerOpen(true)} className="flex items-center gap-2">
                 <Plus size={16} /> Add Customer
+              </Button>
+            )}
+            {activeTab === 'visits' && (
+              <Button onClick={() => setIsAddVisitOpen(true)} className="flex items-center gap-2">
+                <Plus size={16} /> Schedule Visit
               </Button>
             )}
             <Button onClick={() => setIsAddInquiryOpen(true)} className="flex items-center gap-2">
@@ -1809,6 +1846,165 @@ export default function CRMHome() {
                   {/* Floating Action Button (FAB) for Customer Addition on Mobile */}
                   <Button 
                     onClick={() => setIsAddCustomerOpen(true)}
+                    className="fixed bottom-20 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center z-45 md:hidden hover:scale-105 transition-all"
+                    size="icon"
+                  >
+                    <Plus size={24} />
+                  </Button>
+                </div>
+              )}
+
+              {/* TAB 4: VISITS VIEW */}
+              {activeTab === 'visits' && (
+                <div className="glass-panel section-card">
+                  <div className="pipeline-controls flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/15 pb-4">
+                    <div>
+                      <h2 className="section-title text-base md:text-lg">📅 Customer Visit Activity</h2>
+                      <p className="text-xs text-muted mt-0.5">Schedule and log minutes for face-to-face visits.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => setIsAddVisitOpen(true)}
+                        className="hidden md:flex items-center gap-2"
+                      >
+                        <Plus size={16} /> Schedule Visit
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                    {/* Left Column: Scheduled Visits */}
+                    <div className="flex flex-col gap-4">
+                      <h3 className="text-xs md:text-sm font-bold uppercase tracking-wider text-muted border-b border-border/20 pb-2 flex justify-between items-center">
+                        <span>⏳ Upcoming Schedules</span>
+                        <span className="text-[10px] bg-pending/15 text-pending px-2 py-0.5 rounded-full font-semibold">
+                          {visits.filter(v => v.status === 'Scheduled').length}
+                        </span>
+                      </h3>
+                      {visits.filter(v => v.status === 'Scheduled').length === 0 ? (
+                        <div className="text-center p-8 bg-card/25 rounded-xl border border-dashed border-border/30 text-muted text-sm">
+                          No upcoming visits scheduled.
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          {visits.filter(v => v.status === 'Scheduled').map(visit => {
+                            const cust = customers.find(c => c.id === visit.customer_id);
+                            const inq = inquiries.find(i => i.id === visit.inquiry_id);
+                            return (
+                              <div key={visit.id} className="bg-card border border-border p-4 rounded-xl flex flex-col gap-3 relative hover:border-primary/20 transition-all">
+                                <div className="flex justify-between items-start gap-2">
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="text-sm md:text-base font-bold text-foreground truncate">{visit.title}</span>
+                                    <span className="text-xs text-muted font-medium mt-1 truncate">
+                                      🏢 {cust?.company_name || 'Unknown Customer'}
+                                    </span>
+                                    {inq && (
+                                      <span className="text-[11px] text-primary/80 mt-0.5 truncate">
+                                        🔗 Inquiry: {inq.category} ({inq.quotation_number || 'No Quote'})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Badge variant="pending" className="shrink-0">Scheduled</Badge>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] md:text-xs text-muted border-t border-border/40 pt-2.5">
+                                  <span className="truncate">📅 {new Date(visit.scheduled_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                                  <span className="truncate">👤 PIC: {visit.pic_name}</span>
+                                </div>
+                                <div className="text-[11px] md:text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1.5 rounded-lg border border-primary/20 self-start">
+                                  ↔️ Direction: {visit.visit_type}
+                                </div>
+                                <div className="flex gap-2 justify-end border-t border-border/40 pt-2.5 mt-1">
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-primary hover:bg-primary/95 text-white text-[11px] py-1 h-8 px-3"
+                                    onClick={() => { setSelectedVisitForMinutes(visit); setIsLogMinutesOpen(true); }}
+                                  >
+                                    Complete & Log Minutes
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="border-red-500/25 text-red-500 hover:bg-red-500/10 text-[11px] py-1 h-8 px-3"
+                                    onClick={() => handleUpdateVisitStatus(visit.id, 'Canceled')}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column: Historical Visits */}
+                    <div className="flex flex-col gap-4">
+                      <h3 className="text-xs md:text-sm font-bold uppercase tracking-wider text-muted border-b border-border/20 pb-2 flex justify-between items-center">
+                        <span>✅ Completed & Canceled Logs</span>
+                        <span className="text-[10px] bg-card-hover/40 text-foreground/70 px-2 py-0.5 rounded-full font-semibold">
+                          {visits.filter(v => v.status !== 'Scheduled').length}
+                        </span>
+                      </h3>
+                      {visits.filter(v => v.status !== 'Scheduled').length === 0 ? (
+                        <div className="text-center p-8 bg-card/25 rounded-xl border border-dashed border-border/30 text-muted text-sm">
+                          No visit logs found.
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          {visits.filter(v => v.status !== 'Scheduled').map(visit => {
+                            const cust = customers.find(c => c.id === visit.customer_id);
+                            const inq = inquiries.find(i => i.id === visit.inquiry_id);
+                            const isCompleted = visit.status === 'Completed';
+                            return (
+                              <div key={visit.id} className="bg-card border border-border p-4 rounded-xl flex flex-col gap-3 relative opacity-85 hover:opacity-100 transition-opacity">
+                                <div className="flex justify-between items-start gap-2">
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="text-sm md:text-base font-bold text-foreground truncate">{visit.title}</span>
+                                    <span className="text-xs text-muted font-medium mt-1 truncate">
+                                      🏢 {cust?.company_name || 'Unknown Customer'}
+                                    </span>
+                                    {inq && (
+                                      <span className="text-[11px] text-muted mt-0.5 truncate">
+                                        🔗 Inquiry: {inq.category} ({inq.quotation_number || 'No Quote'})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Badge variant={isCompleted ? 'won' : 'outline'} className={isCompleted ? 'shrink-0' : 'text-red-500 border-red-500/20 bg-red-500/5 shrink-0'}>
+                                    {visit.status}
+                                  </Badge>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] md:text-xs text-muted border-t border-border/40 pt-2.5">
+                                  <span className="truncate">📅 {new Date(visit.scheduled_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                                  <span className="truncate">👤 PIC: {visit.pic_name}</span>
+                                </div>
+                                <div className="text-[11px] md:text-xs font-semibold text-muted bg-card-hover/40 px-2.5 py-1.5 rounded-lg border border-border/20 self-start">
+                                  ↔️ Direction: {visit.visit_type}
+                                </div>
+                                {isCompleted && visit.minutes_summary && (
+                                  <div className="text-[11px] md:text-xs text-foreground bg-background/30 border border-border p-3 rounded-lg flex flex-col gap-2">
+                                    <strong className="text-[10px] uppercase tracking-wider text-muted">Meeting Minutes Summary:</strong>
+                                    <p className="whitespace-pre-wrap leading-relaxed">{visit.minutes_summary}</p>
+                                  </div>
+                                )}
+                                {isCompleted && visit.minutes_file_path && (
+                                  <button
+                                    onClick={() => downloadMinutes(visit.minutes_file_path, visit.minutes_file_name)}
+                                    className="self-start text-[10px] md:text-[11px] text-primary hover:underline font-semibold flex items-center gap-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    📎 Download Minutes ({visit.minutes_file_name})
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Floating Action Button (FAB) for Scheduling Visit on Mobile */}
+                  <Button 
+                    onClick={() => setIsAddVisitOpen(true)}
                     className="fixed bottom-20 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center z-45 md:hidden hover:scale-105 transition-all"
                     size="icon"
                   >
