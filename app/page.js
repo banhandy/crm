@@ -3457,7 +3457,9 @@ export default function CRMHome() {
               <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Est. Lead Time (Working Days)</label>
               <Input 
                 type="number" 
-                placeholder="e.g. 5" 
+                placeholder="Calculated automatically from Quotation Date" 
+                disabled
+                className="cursor-not-allowed opacity-60 bg-background/10"
                 value={newInquiry.lead_time_days}
                 onChange={e => setNewInquiry({ ...newInquiry, lead_time_days: e.target.value })}
               />
