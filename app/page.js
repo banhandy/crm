@@ -170,6 +170,8 @@ export default function CRMHome() {
   const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
   const [selectedVisitForMinutes, setSelectedVisitForMinutes] = useState(null);
   const [isLogMinutesOpen, setIsLogMinutesOpen] = useState(false);
+  const [minutesSummary, setMinutesSummary] = useState('');
+  const [minutesFile, setMinutesFile] = useState(null);
 
   // Drawing upload states
   const [itemDrawings, setItemDrawings] = useState({});   // { [itemId]: DrawingRow[] }
@@ -747,6 +749,47 @@ export default function CRMHome() {
       });
     } catch (err) {
       alert("Error scheduling visit: " + err.message);
+    }
+  };
+
+  // Action: Complete a scheduled visit & upload minutes file
+  const handleCompleteVisit = async (e) => {
+    e.preventDefault();
+    try {
+      let filePath = null;
+      let fileName = null;
+
+      if (minutesFile) {
+        const ext = minutesFile.name.split('.').pop();
+        filePath = `minutes/${selectedVisitForMinutes.id}_${Date.now()}.${ext}`;
+        fileName = minutesFile.name;
+
+        const { error: uploadErr } = await supabase.storage
+          .from('drawings')
+          .upload(filePath, minutesFile);
+
+        if (uploadErr) throw uploadErr;
+      }
+
+      const { error: dbErr } = await supabase
+        .from('customer_visits')
+        .update({
+          status: 'Completed',
+          minutes_summary: minutesSummary,
+          minutes_file_path: filePath,
+          minutes_file_name: fileName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedVisitForMinutes.id);
+
+      if (dbErr) throw dbErr;
+
+      setIsLogMinutesOpen(false);
+      setSelectedVisitForMinutes(null);
+      setMinutesSummary('');
+      setMinutesFile(null);
+    } catch (err) {
+      alert("Error logging minutes: " + err.message);
     }
   };
 
@@ -3549,6 +3592,69 @@ export default function CRMHome() {
               <div className="mt-6 pt-4 border-t border-border flex gap-3 shrink-0">
                 <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setIsAddVisitOpen(false)}>Cancel</Button>
                 <Button type="submit" className="flex-1 bg-primary text-white h-11 hover:bg-primary/95">Schedule</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 7. MODAL POPUP: LOG MEETING MINUTES */}
+      {isLogMinutesOpen && selectedVisitForMinutes && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[1002] flex items-center justify-center transition-opacity duration-250">
+          <div className="w-[92vw] sm:w-[500px] bg-sidebar border border-border rounded-2xl shadow-2xl flex flex-col p-6 md:p-8 overflow-x-hidden">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-5 flex-shrink-0">
+              <h2 className="text-lg font-bold text-foreground">Log Visit Minutes</h2>
+              <button 
+                type="button"
+                className="bg-transparent border-none text-muted hover:text-foreground cursor-pointer transition-colors p-1.5 rounded-full hover:bg-card-hover"
+                onClick={() => { setIsLogMinutesOpen(false); setSelectedVisitForMinutes(null); setMinutesSummary(''); setMinutesFile(null); }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="mb-4 text-xs bg-card-hover/40 p-3 rounded-lg border border-border/20">
+              <span className="font-semibold block text-foreground">{selectedVisitForMinutes.title}</span>
+              <span className="text-muted mt-1 block">
+                🏢 {customers.find(c => c.id === selectedVisitForMinutes.customer_id)?.company_name}
+              </span>
+            </div>
+            <form className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 w-full box-border" onSubmit={handleCompleteVisit}>
+              <div className="flex flex-col gap-2 min-w-0">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Minutes Summary *</label>
+                <textarea 
+                  className="flex min-h-[120px] w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-all duration-200 resize-y"
+                  placeholder="Summarize key points, decisions, and action items..." 
+                  required
+                  value={minutesSummary}
+                  onChange={e => setMinutesSummary(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 min-w-0">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Upload Attachment (Minutes File)</label>
+                <Input 
+                  type="file" 
+                  className="cursor-pointer text-xs"
+                  onChange={e => setMinutesFile(e.target.files[0])}
+                />
+                <p className="text-[10px] text-muted">Accepted formats: PDF, Word, Excel, Images</p>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-border flex gap-3 shrink-0">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="flex-1 h-11" 
+                  onClick={() => { setIsLogMinutesOpen(false); setSelectedVisitForMinutes(null); setMinutesSummary(''); setMinutesFile(null); }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-primary text-white h-11 hover:bg-primary/95"
+                >
+                  Complete Visit
+                </Button>
               </div>
             </form>
           </div>
