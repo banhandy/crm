@@ -1028,7 +1028,7 @@ export default function CRMHome() {
       <aside className={`flex h-full flex-col justify-between border-r border-border bg-sidebar py-6 transition-all duration-300 z-55 shrink-0 ${sidebarCollapsed ? 'w-20 px-3' : 'w-64 px-4'} ${mobileSidebarOpen ? 'fixed inset-y-0 left-0 translate-x-0 w-64' : 'hidden md:flex'}`}>
         <div>
           <div className={`flex items-center justify-between pb-6 border-b border-border ${sidebarCollapsed ? 'px-0 justify-center' : 'px-3'}`}>
-            <div className="flex items-center gap-3 w-full">
+            <div className={`flex items-center w-full ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
               <img src="/icon.png" alt="ZAP CRM" className="w-8 h-8 rounded-lg object-contain shrink-0" />
               {!sidebarCollapsed && <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-muted bg-clip-text text-transparent">ZAP CRM</span>}
             </div>
@@ -1171,9 +1171,11 @@ export default function CRMHome() {
                 <Plus size={16} /> Schedule Visit
               </Button>
             )}
-            <Button onClick={() => setIsAddInquiryOpen(true)} className="flex items-center gap-2">
-              <Plus size={16} /> New Inquiry
-            </Button>
+            {activeTab !== 'customers' && activeTab !== 'visits' && (
+              <Button onClick={() => setIsAddInquiryOpen(true)} className="flex items-center gap-2">
+                <Plus size={16} /> New Inquiry
+              </Button>
+            )}
           </div>
         </header>
 
