@@ -948,10 +948,8 @@ export default function CRMHome() {
       <div className="flex items-center justify-center w-screen h-screen bg-background transition-colors duration-300">
         <div className="w-[420px] p-10 rounded-2xl border border-border bg-card shadow-2xl flex flex-col gap-6">
           <div className="text-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary to-pending rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
-              C
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">CRM Core Portal</h2>
+            <img src="/icon.png" alt="ZAP CRM" className="w-14 h-14 rounded-xl mx-auto mb-4 object-contain" />
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">ZAP CRM</h2>
             <p className="text-xs text-muted mt-1.5 uppercase tracking-wider font-semibold">Admin-Managed Access Portal</p>
           </div>
 
@@ -1031,8 +1029,8 @@ export default function CRMHome() {
         <div>
           <div className={`flex items-center justify-between pb-6 border-b border-border ${sidebarCollapsed ? 'px-0 justify-center' : 'px-3'}`}>
             <div className="flex items-center gap-3 w-full">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-pending text-white font-bold text-lg shrink-0">C</div>
-              {!sidebarCollapsed && <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-muted bg-clip-text text-transparent">CRM Core</span>}
+              <img src="/icon.png" alt="ZAP CRM" className="w-8 h-8 rounded-lg object-contain shrink-0" />
+              {!sidebarCollapsed && <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-muted bg-clip-text text-transparent">ZAP CRM</span>}
             </div>
             {!sidebarCollapsed && (
               <Button 
