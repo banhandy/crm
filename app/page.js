@@ -1513,90 +1513,151 @@ export default function CRMHome() {
                     </div>
                   )}
 
-                  {/* DATA TABLE */}
+                  {/* DATA TABLE / CARDS */}
                   {filteredInquiries.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
                       <AlertCircle size={40} style={{ marginBottom: '12px' }} />
                       <p style={{ fontWeight: '500' }}>No inquiries match your filters.</p>
                     </div>
                   ) : (
-                    <div className="table-container">
-                      <table className="crm-table">
-                        <thead>
-                          <tr>
-                            <th className="sortable-header" onClick={() => handleSort('inquiry_date')}>Inquiry Date {renderSortIcon('inquiry_date')}</th>
-                            <th className="sortable-header" onClick={() => handleSort('customer')}>Customer {renderSortIcon('customer')}</th>
-                            <th>Items</th>
-                            <th>Type</th>
-                            <th className="sortable-header" onClick={() => handleSort('quotation_number')}>Quot. # {renderSortIcon('quotation_number')}</th>
-                            <th>Lead Time</th>
-                            <th className="sortable-header" onClick={() => handleSort('value')}>Value {renderSortIcon('value')}</th>
-                            <th className="sortable-header" onClick={() => handleSort('pic')}>PIC {renderSortIcon('pic')}</th>
-                            <th className="sortable-header" onClick={() => handleSort('status')}>Status {renderSortIcon('status')}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sortedFilteredInquiries.map(inq => {
-                            const isStaleItem = isStale(inq.last_activity_at) && inq.status !== 'PO Won' && inq.status !== 'Canceled';
-                            return (
-                              <tr key={inq.id} onClick={() => openInquiryDrawer(inq)}>
-                                <td>{new Date(inq.inquiry_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                                <td style={{ fontWeight: '600' }}>
-                                  {isStaleItem && <span className="stale-pulse"></span>}
-                                  {inq.customers?.company_name}
-                                </td>
-                                <td>
-                                  <span className="item-count-badge">
-                                    📦 {inq.inquiry_items?.length || 0} {inq.inquiry_items?.length === 1 ? 'Item' : 'Items'}
-                                  </span>
-                                </td>
-                                <td>
-                                  <span style={{ fontSize: '11px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                                    {inq.category}
-                                  </span>
-                                </td>
-                                <td style={{ color: inq.quotation_number ? 'inherit' : 'var(--color-pending)', fontWeight: inq.quotation_number ? 'normal' : '600' }}>
-                                  {inq.quotation_number || 'Waiting Input'}
-                                </td>
-                                <td>
-                                  {!inq.quotation_number && inq.status !== 'Canceled' ? (
-                                    (() => {
-                                      const openDays = getDaysOpen(inq.inquiry_date);
-                                      return (
-                                        <span style={{ color: 'var(--color-follow)', fontWeight: '600', fontSize: '13px' }}>
-                                          ⏱️ {openDays} {openDays === 1 ? 'day' : 'days'} open
-                                        </span>
-                                      );
-                                    })()
-                                  ) : (
-                                    inq.lead_time_days ? `${inq.lead_time_days} days` : '-'
-                                  )}
-                                </td>
-                                <td style={{ fontWeight: '600', color: 'var(--color-won)' }}>{getInquiryTotal(inq)}</td>
-                                <td style={{ fontWeight: '500' }}>{inq.customers?.pic_name}</td>
-                                <td>
-                                  {isStaleItem ? (
-                                    <span className="status-badge badge-stale">Stale Follow-up</span>
-                                  ) : (
-                                    (() => {
-                                      const aggStatus = getAggregateStatus(inq);
-                                      if (aggStatus === 'PO Won') return <span className="status-badge badge-won">PO Won</span>;
-                                      if (aggStatus.startsWith('PO Won (')) return <span className="status-badge badge-partial-won">{aggStatus}</span>;
-                                      if (aggStatus === 'Pending Quotation') return <span className="status-badge badge-pending">Pending Quotation</span>;
-                                      if (aggStatus === 'Submitted') return <span className="status-badge badge-pending" style={{ color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'var(--color-accent-glow)' }}>Submitted</span>;
-                                      if (aggStatus === 'Follow Up') return <span className="status-badge badge-follow">Follow Up</span>;
-                                      if (aggStatus === 'Canceled') return <span className="status-badge badge-canceled">Canceled</span>;
-                                      return null;
-                                    })()
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                    <>
+                      {/* Desktop Table View */}
+                      <div className="table-container hidden md:block">
+                        <table className="crm-table">
+                          <thead>
+                            <tr>
+                              <th className="sortable-header" onClick={() => handleSort('inquiry_date')}>Inquiry Date {renderSortIcon('inquiry_date')}</th>
+                              <th className="sortable-header" onClick={() => handleSort('customer')}>Customer {renderSortIcon('customer')}</th>
+                              <th>Items</th>
+                              <th>Type</th>
+                              <th className="sortable-header" onClick={() => handleSort('quotation_number')}>Quot. # {renderSortIcon('quotation_number')}</th>
+                              <th>Lead Time</th>
+                              <th className="sortable-header" onClick={() => handleSort('value')}>Value {renderSortIcon('value')}</th>
+                              <th className="sortable-header" onClick={() => handleSort('pic')}>PIC {renderSortIcon('pic')}</th>
+                              <th className="sortable-header" onClick={() => handleSort('status')}>Status {renderSortIcon('status')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sortedFilteredInquiries.map(inq => {
+                              const isStaleItem = isStale(inq.last_activity_at) && inq.status !== 'PO Won' && inq.status !== 'Canceled';
+                              return (
+                                <tr key={inq.id} onClick={() => openInquiryDrawer(inq)}>
+                                  <td>{new Date(inq.inquiry_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                                  <td style={{ fontWeight: '600' }}>
+                                    {isStaleItem && <span className="stale-pulse"></span>}
+                                    {inq.customers?.company_name}
+                                  </td>
+                                  <td>
+                                    <span className="item-count-badge">
+                                      📦 {inq.inquiry_items?.length || 0} {inq.inquiry_items?.length === 1 ? 'Item' : 'Items'}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span style={{ fontSize: '11px', textTransform: 'uppercase', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                                      {inq.category}
+                                    </span>
+                                  </td>
+                                  <td style={{ color: inq.quotation_number ? 'inherit' : 'var(--color-pending)', fontWeight: inq.quotation_number ? 'normal' : '600' }}>
+                                    {inq.quotation_number || 'Waiting Input'}
+                                  </td>
+                                  <td>
+                                    {!inq.quotation_number && inq.status !== 'Canceled' ? (
+                                      (() => {
+                                        const openDays = getDaysOpen(inq.inquiry_date);
+                                        return (
+                                          <span style={{ color: 'var(--color-follow)', fontWeight: '600', fontSize: '13px' }}>
+                                            ⏱️ {openDays} {openDays === 1 ? 'day' : 'days'} open
+                                          </span>
+                                        );
+                                      })()
+                                    ) : (
+                                      inq.lead_time_days ? `${inq.lead_time_days} days` : '-'
+                                    )}
+                                  </td>
+                                  <td style={{ fontWeight: '600', color: 'var(--color-won)' }}>{getInquiryTotal(inq)}</td>
+                                  <td style={{ fontWeight: '500' }}>{inq.customers?.pic_name}</td>
+                                  <td>
+                                    {isStaleItem ? (
+                                      <span className="status-badge badge-stale">Stale Follow-up</span>
+                                    ) : (
+                                      (() => {
+                                        const aggStatus = getAggregateStatus(inq);
+                                        if (aggStatus === 'PO Won') return <span className="status-badge badge-won">PO Won</span>;
+                                        if (aggStatus.startsWith('PO Won (')) return <span className="status-badge badge-partial-won">{aggStatus}</span>;
+                                        if (aggStatus === 'Pending Quotation') return <span className="status-badge badge-pending">Pending Quotation</span>;
+                                        if (aggStatus === 'Submitted') return <span className="status-badge badge-pending" style={{ color: 'var(--color-accent)', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'var(--color-accent-glow)' }}>Submitted</span>;
+                                        if (aggStatus === 'Follow Up') return <span className="status-badge badge-follow">Follow Up</span>;
+                                        if (aggStatus === 'Canceled') return <span className="status-badge badge-canceled">Canceled</span>;
+                                        return null;
+                                      })()
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile Cards View */}
+                      <div className="flex flex-col gap-4 md:hidden">
+                        {sortedFilteredInquiries.map(inq => {
+                          const isStaleItem = isStale(inq.last_activity_at) && inq.status !== 'PO Won' && inq.status !== 'Canceled';
+                          const aggStatus = isStaleItem ? 'Stale Follow-up' : getAggregateStatus(inq);
+                          return (
+                            <div 
+                              key={inq.id} 
+                              onClick={() => openInquiryDrawer(inq)}
+                              className="bg-card border border-border p-4 rounded-xl flex flex-col gap-3 hover:bg-card-hover/40 transition-all cursor-pointer relative"
+                            >
+                              {/* Header: Date + Status */}
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-muted">
+                                  {new Date(inq.inquiry_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                                {(() => {
+                                  if (aggStatus === 'PO Won') return <Badge variant="won">PO Won</Badge>;
+                                  if (aggStatus.startsWith('PO Won (')) return <Badge variant="won">{aggStatus}</Badge>;
+                                  if (aggStatus === 'Pending Quotation') return <Badge variant="pending">Pending Quotation</Badge>;
+                                  if (aggStatus === 'Submitted') return <Badge variant="pending" className="border-primary bg-primary/10 text-primary">Submitted</Badge>;
+                                  if (aggStatus === 'Follow Up') return <Badge variant="follow">Follow Up</Badge>;
+                                  if (aggStatus === 'Canceled') return <Badge variant="outline" className="text-muted/65 border-muted/20">Canceled</Badge>;
+                                  if (aggStatus === 'Stale Follow-up') return <Badge variant="stale">Stale Follow-up</Badge>;
+                                  return <Badge variant="pending">{aggStatus}</Badge>;
+                                })()}
+                              </div>
+
+                              {/* Title: Company name */}
+                              <div className="text-base font-bold text-foreground flex items-center gap-2">
+                                {isStaleItem && <span className="stale-pulse shrink-0"></span>}
+                                <span className="truncate">{inq.customers?.company_name}</span>
+                              </div>
+
+                              {/* Footer: Item count + value/lead indicator */}
+                              <div className="flex justify-between items-center text-xs text-muted">
+                                <span className="flex items-center gap-1.5">
+                                  📦 {inq.inquiry_items?.length || 0} {inq.inquiry_items?.length === 1 ? 'Item' : 'Items'}
+                                </span>
+                                <span className="font-semibold text-won">
+                                  {getInquiryTotal(inq)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Floating Action Button (FAB) on Mobile */}
+                      <Button 
+                        onClick={() => setIsAddInquiryOpen(true)}
+                        className="fixed bottom-20 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center z-45 md:hidden hover:scale-105 transition-all"
+                        size="icon"
+                      >
+                        <Plus size={24} />
+                      </Button>
+                    </>
                   )}
+
                 </div>
               )}
 
