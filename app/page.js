@@ -216,6 +216,16 @@ export default function CRMHome() {
     status_email: 'Active'
   });
 
+  // Form states for new visit
+  const [newVisit, setNewVisit] = useState({
+    customer_id: '',
+    inquiry_id: '',
+    title: '',
+    visit_type: 'Our Visit to Customer',
+    scheduled_at: '',
+    pic_name: ''
+  });
+
   // Fetch all initial data
   const fetchData = async () => {
     try {
@@ -714,6 +724,29 @@ export default function CRMHome() {
       link.parentNode.removeChild(link);
     } catch (err) {
       alert("Download error: " + err.message);
+    }
+  };
+
+  // Action: Schedule a new customer visit
+  const handleScheduleVisit = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.from('customer_visits').insert([{
+        ...newVisit,
+        status: 'Scheduled'
+      }]);
+      if (error) throw error;
+      setIsAddVisitOpen(false);
+      setNewVisit({
+        customer_id: '',
+        inquiry_id: '',
+        title: '',
+        visit_type: 'Our Visit to Customer',
+        scheduled_at: '',
+        pic_name: ''
+      });
+    } catch (err) {
+      alert("Error scheduling visit: " + err.message);
     }
   };
 
@@ -3418,6 +3451,109 @@ export default function CRMHome() {
           </form>
         </div>
       </div>
+
+      {/* 6. MODAL POPUP: ADD VISIT */}
+      {isAddVisitOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[1002] flex items-center justify-center transition-opacity duration-250">
+          <div className="w-[92vw] sm:w-[500px] bg-sidebar border border-border rounded-2xl shadow-2xl flex flex-col p-6 md:p-8 overflow-x-hidden">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-5 flex-shrink-0">
+              <h2 className="text-lg font-bold text-foreground">Schedule Customer Visit</h2>
+              <button 
+                type="button"
+                className="bg-transparent border-none text-muted hover:text-foreground cursor-pointer transition-colors p-1.5 rounded-full hover:bg-card-hover"
+                onClick={() => setIsAddVisitOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <form className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 w-full box-border" onSubmit={handleScheduleVisit}>
+              <div className="flex flex-col gap-2 min-w-0">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Customer / Company *</label>
+                <Select 
+                  required
+                  value={newVisit.customer_id}
+                  onChange={e => setNewVisit({ ...newVisit, customer_id: e.target.value, inquiry_id: '' })}
+                >
+                  <option value="">-- Select Customer --</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>{c.company_name}</option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-2 min-w-0">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Link to Inquiry (Optional)</label>
+                <Select 
+                  value={newVisit.inquiry_id}
+                  onChange={e => setNewVisit({ ...newVisit, inquiry_id: e.target.value })}
+                  disabled={!newVisit.customer_id}
+                >
+                  <option value="">-- No Link / General Visit --</option>
+                  {inquiries.filter(i => i.customer_id === newVisit.customer_id).map(i => (
+                    <option key={i.id} value={i.id}>
+                      {i.category} ({i.quotation_number || 'Pending'})
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-2 min-w-0">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Visit / Discussion Title *</label>
+                <Input 
+                  type="text" 
+                  placeholder="e.g. Discuss FAI samples, Review Quote" 
+                  required
+                  value={newVisit.title}
+                  onChange={e => setNewVisit({ ...newVisit, title: e.target.value })}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 min-w-0">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Visit Direction *</label>
+                <Select 
+                  required
+                  value={newVisit.visit_type}
+                  onChange={e => setNewVisit({ ...newVisit, visit_type: e.target.value })}
+                >
+                  <option value="Our Visit to Customer">Our Visit to Customer (We Visit Them)</option>
+                  <option value="Customer Visit to Us">Customer Visit to Us (They Visit Us)</option>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-2 min-w-0">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Scheduled Date & Time *</label>
+                <Input 
+                  type="datetime-local" 
+                  required
+                  value={newVisit.scheduled_at}
+                  onChange={e => setNewVisit({ ...newVisit, scheduled_at: e.target.value })}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 min-w-0">
+                <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Assigned PIC *</label>
+                <Select 
+                  required
+                  value={newVisit.pic_name}
+                  onChange={e => setNewVisit({ ...newVisit, pic_name: e.target.value })}
+                >
+                  <option value="">-- Select Team Member --</option>
+                  <option value="AFIF NI">AFIF NI</option>
+                  <option value="PUTRI">PUTRI</option>
+                  <option value="NOVY">NOVY</option>
+                  <option value="ERVAN">ERVAN</option>
+                  <option value="RANU">RANU</option>
+                </Select>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-border flex gap-3 shrink-0">
+                <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setIsAddVisitOpen(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1 bg-primary text-white h-11 hover:bg-primary/95">Schedule</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── PDF DRAWING VIEWER MODAL ── */}
       {viewerDrawing && (
