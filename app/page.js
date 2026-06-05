@@ -1144,7 +1144,7 @@ export default function CRMHome() {
                     </div>
                   </div>
 
-                  <div className="dashboard-grid">
+                  <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
                   {/* Left Column: Stale follow-up items needing immediate attention */}
                   <div className="glass-panel section-card">
                     <div className="section-header">
@@ -1161,47 +1161,80 @@ export default function CRMHome() {
                         <p style={{ fontSize: '13px' }}>All active inquiries have been updated recently.</p>
                       </div>
                     ) : (
-                      <div className="table-container">
-                        <table className="crm-table">
-                          <thead>
-                            <tr>
-                              <th>Customer</th>
-                              <th>Items</th>
-                              <th>Quot. #</th>
-                              <th>Inquiry Value</th>
-                              <th>Status</th>
-                              <th>Last Update</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {staleInquiries.map(inq => (
-                              <tr key={inq.id} onClick={() => openInquiryDrawer(inq)}>
-                                <td style={{ fontWeight: '600' }}>
-                                  <span className="stale-pulse"></span>
-                                  {inq.customers?.company_name}
-                                </td>
-                                <td>
-                                  <span className="item-count-badge">
-                                    📦 {inq.inquiry_items?.length || 0} {inq.inquiry_items?.length === 1 ? 'Item' : 'Items'}
-                                  </span>
-                                </td>
-                                <td style={{ color: inq.quotation_number ? 'var(--text-main)' : 'var(--color-pending)' }}>
-                                  {inq.quotation_number || 'Missing'}
-                                </td>
-                                <td style={{ fontWeight: '600', color: 'var(--color-won)' }}>
-                                  {getInquiryTotal(inq)}
-                                </td>
-                                <td>
-                                  <span className="status-badge badge-stale">Stale Follow-up</span>
-                                </td>
-                                <td style={{ color: 'var(--color-stale)', fontWeight: '500' }}>
-                                  {new Date(inq.last_activity_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                </td>
+                      <>
+                        {/* Desktop View */}
+                        <div className="table-container hidden md:block">
+                          <table className="crm-table">
+                            <thead>
+                              <tr>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Quot. #</th>
+                                <th>Inquiry Value</th>
+                                <th>Status</th>
+                                <th>Last Update</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                            </thead>
+                            <tbody>
+                              {staleInquiries.map(inq => (
+                                <tr key={inq.id} onClick={() => openInquiryDrawer(inq)}>
+                                  <td style={{ fontWeight: '600' }}>
+                                    <span className="stale-pulse"></span>
+                                    {inq.customers?.company_name}
+                                  </td>
+                                  <td>
+                                    <span className="item-count-badge">
+                                      📦 {inq.inquiry_items?.length || 0} {inq.inquiry_items?.length === 1 ? 'Item' : 'Items'}
+                                    </span>
+                                  </td>
+                                  <td style={{ color: inq.quotation_number ? 'var(--text-main)' : 'var(--color-pending)' }}>
+                                    {inq.quotation_number || 'Missing'}
+                                  </td>
+                                  <td style={{ fontWeight: '600', color: 'var(--color-won)' }}>
+                                    {getInquiryTotal(inq)}
+                                  </td>
+                                  <td>
+                                    <span className="status-badge badge-stale">Stale Follow-up</span>
+                                  </td>
+                                  <td style={{ color: 'var(--color-stale)', fontWeight: '500' }}>
+                                    {new Date(inq.last_activity_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Mobile View */}
+                        <div className="flex flex-col gap-3 md:hidden">
+                          {staleInquiries.map(inq => (
+                            <div 
+                              key={inq.id}
+                              onClick={() => openInquiryDrawer(inq)}
+                              className="bg-card border border-border p-4 rounded-xl flex flex-col gap-2 hover:bg-card-hover/40 transition-all cursor-pointer relative"
+                            >
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-muted">
+                                  Last activity: {new Date(inq.last_activity_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                </span>
+                                <span className="status-badge badge-stale text-[11px] px-2 py-0.5 rounded">Stale</span>
+                              </div>
+                              <div className="text-sm font-bold text-foreground flex items-center gap-2">
+                                <span className="stale-pulse shrink-0"></span>
+                                <span className="truncate">{inq.customers?.company_name}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs text-muted">
+                                <span>
+                                  📦 {inq.inquiry_items?.length || 0} {inq.inquiry_items?.length === 1 ? 'Item' : 'Items'}
+                                </span>
+                                <span className="font-semibold text-won">
+                                  {getInquiryTotal(inq)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
 
@@ -1687,7 +1720,7 @@ export default function CRMHome() {
                       <p style={{ fontWeight: '500' }}>No customers registered.</p>
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                       {customers.filter(c => 
                         c.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         c.pic_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1745,6 +1778,15 @@ export default function CRMHome() {
                       })}
                     </div>
                   )}
+
+                  {/* Floating Action Button (FAB) for Customer Addition on Mobile */}
+                  <Button 
+                    onClick={() => setIsAddCustomerOpen(true)}
+                    className="fixed bottom-20 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center z-45 md:hidden hover:scale-105 transition-all"
+                    size="icon"
+                  >
+                    <Plus size={24} />
+                  </Button>
                 </div>
               )}
             </>
