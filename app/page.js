@@ -735,6 +735,7 @@ export default function CRMHome() {
     try {
       const { error } = await supabase.from('customer_visits').insert([{
         ...newVisit,
+        inquiry_id: newVisit.inquiry_id || null,
         status: 'Scheduled'
       }]);
       if (error) throw error;
