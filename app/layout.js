@@ -2,7 +2,7 @@ import './globals.css';
 import { ThemeProvider } from '../components/theme-provider';
 
 export const metadata = {
-  title: 'Banhandy CRM — Inquiry & Visit Management',
+  title: 'ZAP CRM — Inquiry & Visit Management',
   description: 'Precision engineering CRM for managing inquiries, quotations, customer visits and meeting minutes.',
   icons: {
     icon: '/icon.png',
