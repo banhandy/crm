@@ -1799,7 +1799,7 @@ export default function CRMHome() {
         className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => { setIsDrawerOpen(false); setSelectedInquiry(null); }}
       />
-      <div className={`fixed top-0 right-0 bottom-0 w-full sm:w-[600px] md:w-[66vw] max-w-[950px] bg-sidebar border-l border-border shadow-2xl z-[1001] transition-transform duration-300 ease-in-out flex flex-col p-6 md:p-8 overflow-x-hidden ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 bottom-0 w-full sm:w-[600px] md:w-[66vw] max-w-[950px] bg-sidebar border-l border-border shadow-2xl z-[1001] transition-transform duration-300 ease-in-out flex flex-col p-4 md:p-8 overflow-x-hidden ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="border-b border-border pb-4 mb-6 flex flex-col gap-3 items-stretch shrink-0">
           <div className="flex justify-between items-start">
             <div>
@@ -1894,7 +1894,7 @@ export default function CRMHome() {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-[2fr_1fr] gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-3">
                         <div className="flex flex-col gap-2 min-w-0">
                           <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Item / Product Name *</label>
                           <Input 
@@ -1926,7 +1926,7 @@ export default function CRMHome() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="flex flex-col gap-2 min-w-0">
                           <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Material</label>
                           <Input 
@@ -2005,7 +2005,7 @@ export default function CRMHome() {
 
                       {isExpanded && (
                         <div className="flex flex-col gap-3 mt-1.5 p-3 bg-background/10 rounded-lg border border-border/20">
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="flex flex-col gap-2 min-w-0">
                               <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Tipe Proses</label>
                               <Select 
@@ -2039,7 +2039,7 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-5 gap-1.5">
+                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                             <div className="flex flex-col gap-1 min-w-0">
                               <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Cast Price</label>
                               <Input 
@@ -2134,7 +2134,7 @@ export default function CRMHome() {
                             <Badge variant="won">{item.fai_status || 'Pending'}</Badge>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="flex flex-col gap-2 min-w-0">
                               <label className="text-[11px] font-semibold text-won">FAI Status</label>
                               <Select 
@@ -2166,7 +2166,7 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div className="flex flex-col gap-2 min-w-0">
                               <label className="text-[10px] text-muted">Dimensions Check</label>
                               <Select 
@@ -2214,7 +2214,7 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-[2fr_1fr] gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-3">
                             <div className="flex flex-col gap-2 min-w-0">
                               <label className="text-[11px] text-muted">Remarks / Tolerance Notes</label>
                               <textarea 
@@ -2731,7 +2731,7 @@ export default function CRMHome() {
 
       {/* 4. MODAL POPUP: ADD INQUIRY */}
       <div className={`fixed inset-0 bg-black/60 backdrop-blur-md z-[1002] flex items-center justify-center transition-opacity duration-250 ${isAddInquiryOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className={`w-[500px] max-w-[92vw] bg-sidebar border border-border rounded-2xl shadow-2xl flex flex-col p-6 md:p-8 overflow-x-hidden transition-all duration-250 ease-in-out ${isAddInquiryOpen ? 'translate-y-0 opacity-100' : '-translate-y-5 opacity-0'}`}>
+        <div className={`w-[92vw] sm:w-[500px] bg-sidebar border border-border rounded-2xl shadow-2xl flex flex-col p-6 md:p-8 overflow-x-hidden transition-all duration-250 ease-in-out ${isAddInquiryOpen ? 'translate-y-0 opacity-100' : '-translate-y-5 opacity-0'}`}>
           <div className="flex items-center justify-between border-b border-border pb-4 mb-5 flex-shrink-0">
             <h2 className="text-lg font-bold text-foreground">Log New Inquiry</h2>
             <button 
@@ -2809,7 +2809,7 @@ export default function CRMHome() {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-[2fr_1fr] gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-3">
                         <div className="flex flex-col gap-2 min-w-0">
                           <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Item / Product Name *</label>
                           <Input 
@@ -2841,7 +2841,7 @@ export default function CRMHome() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="flex flex-col gap-2 min-w-0">
                           <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Material</label>
                           <Input 
@@ -2886,7 +2886,7 @@ export default function CRMHome() {
 
                       {isExpanded && (
                         <div className="flex flex-col gap-3 mt-1.5 p-3 bg-background/10 rounded-lg border border-border/20">
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="flex flex-col gap-2 min-w-0">
                               <label className="text-[11px] uppercase tracking-wider font-semibold text-muted">Tipe Proses</label>
                               <Select 
@@ -2920,7 +2920,7 @@ export default function CRMHome() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-5 gap-1.5">
+                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                             <div className="flex flex-col gap-1 min-w-0">
                               <label className="text-[9px] uppercase tracking-wider font-semibold text-muted">Cast Price</label>
                               <Input 
@@ -3099,7 +3099,7 @@ export default function CRMHome() {
 
       {/* 5. MODAL POPUP: ADD CUSTOMER */}
       <div className={`fixed inset-0 bg-black/60 backdrop-blur-md z-[1002] flex items-center justify-center transition-opacity duration-250 ${isAddCustomerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className={`w-[500px] max-w-[92vw] bg-sidebar border border-border rounded-2xl shadow-2xl flex flex-col p-6 md:p-8 overflow-x-hidden transition-all duration-250 ease-in-out ${isAddCustomerOpen ? 'translate-y-0 opacity-100' : '-translate-y-5 opacity-0'}`}>
+        <div className={`w-[92vw] sm:w-[500px] bg-sidebar border border-border rounded-2xl shadow-2xl flex flex-col p-6 md:p-8 overflow-x-hidden transition-all duration-250 ease-in-out ${isAddCustomerOpen ? 'translate-y-0 opacity-100' : '-translate-y-5 opacity-0'}`}>
           <div className="flex items-center justify-between border-b border-border pb-4 mb-5 flex-shrink-0">
             <h2 className="text-lg font-bold text-foreground">Register New Customer</h2>
             <button 
