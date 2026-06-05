@@ -1868,6 +1868,7 @@ export default function CRMHome() {
                       ).map(cust => {
                         const custInquiries = inquiries.filter(i => i.customer_id === cust.id);
                         const wonInquiries = custInquiries.filter(i => i.status === 'PO Won');
+                        const customerVisits = visits.filter(v => v.customer_id === cust.id);
                         return (
                           <div key={cust.id} className="glass-panel section-card glass-panel-hover" style={{ gap: '16px' }}>
                             <div>
@@ -1913,6 +1914,38 @@ export default function CRMHome() {
                                 {cust.status_email}
                               </span>
                             </div>
+
+                            {customerVisits.length > 0 && (
+                              <div className="border-t border-dashed border-border pt-3 mt-1 flex flex-col gap-1.5">
+                                <span className="text-[10px] uppercase font-bold text-primary block">📅 Related Visits ({customerVisits.length}):</span>
+                                <div className="flex flex-col gap-1.5 max-h-[120px] overflow-y-auto pr-1">
+                                  {customerVisits.map(visit => {
+                                    const isCompleted = visit.status === 'Completed';
+                                    return (
+                                      <div key={visit.id} className="flex justify-between items-center text-xs p-2 bg-background/20 rounded border border-border/10 gap-2">
+                                        <div className="flex flex-col min-w-0">
+                                          <span className="font-semibold text-foreground truncate">{visit.title}</span>
+                                          <span className="text-[10px] text-muted">{new Date(visit.scheduled_at).toLocaleDateString()}</span>
+                                        </div>
+                                        {isCompleted && visit.minutes_file_path ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => downloadMinutes(visit.minutes_file_path, visit.minutes_file_name)}
+                                            className="text-[10px] text-primary hover:underline shrink-0 bg-primary/5 px-2 py-1 rounded border border-primary/20 cursor-pointer"
+                                          >
+                                            📎 File
+                                          </button>
+                                        ) : (
+                                          <Badge variant={isCompleted ? 'won' : 'outline'} className="text-[8px] px-1 py-0 shrink-0">
+                                            {visit.status}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -3012,6 +3045,57 @@ export default function CRMHome() {
                 <p className="m-0 text-xs text-foreground whitespace-pre-wrap leading-relaxed">{selectedInquiry.remark}</p>
               </div>
             )}
+
+            {/* Related Customer Visits */}
+            {(() => {
+              const inquiryVisits = visits.filter(v => v.inquiry_id === selectedInquiry?.id);
+              return (
+                <div className="bg-background/10 border border-border rounded-xl p-4 flex flex-col gap-3">
+                  <span className="text-[10px] uppercase text-muted font-bold flex justify-between items-center">
+                    <span>📅 Related Visit History</span>
+                    <span className="bg-primary/15 text-primary text-[9px] px-1.5 py-0.5 rounded-full font-bold">
+                      {inquiryVisits.length}
+                    </span>
+                  </span>
+                  {inquiryVisits.length === 0 ? (
+                    <p className="text-xs text-muted m-0">No visits recorded for this inquiry.</p>
+                  ) : (
+                    <div className="flex flex-col gap-2.5">
+                      {inquiryVisits.map(visit => {
+                        const isCompleted = visit.status === 'Completed';
+                        return (
+                          <div key={visit.id} className="p-3 bg-card border border-border rounded-lg flex flex-col gap-2">
+                            <div className="flex justify-between items-center gap-2">
+                              <span className="text-xs font-semibold text-foreground truncate">{visit.title}</span>
+                              <Badge variant={isCompleted ? 'won' : 'outline'} className={isCompleted ? 'text-[9px] px-1.5' : 'text-red-500 border-red-500/20 bg-red-500/5 text-[9px] px-1.5'}>
+                                {visit.status}
+                              </Badge>
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] text-muted border-t border-border/45 pt-1.5">
+                              <span>📅 {new Date(visit.scheduled_at).toLocaleDateString(undefined, { dateStyle: 'short' })}</span>
+                              <span>👤 PIC: {visit.pic_name}</span>
+                            </div>
+                            {isCompleted && visit.minutes_summary && (
+                              <p className="text-[11px] text-foreground bg-background/20 p-2 rounded border border-border/20 whitespace-pre-wrap leading-relaxed m-0">
+                                {visit.minutes_summary}
+                              </p>
+                            )}
+                            {isCompleted && visit.minutes_file_path && (
+                              <button
+                                onClick={() => downloadMinutes(visit.minutes_file_path, visit.minutes_file_name)}
+                                className="self-start text-[10px] text-primary hover:underline font-semibold flex items-center gap-1 bg-primary/5 hover:bg-primary/10 border border-primary/20 px-2 py-1 rounded transition-colors cursor-pointer"
+                              >
+                                📎 Download minutes
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Drawer Footer View Only */}
             <div className="mt-6 pt-4 border-t border-border flex shrink-0">
