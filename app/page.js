@@ -713,6 +713,7 @@ export default function CRMHome() {
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', visitId);
       if (error) throw error;
+      fetchData();
     } catch (err) {
       alert("Error updating visit status: " + err.message);
     }
@@ -754,6 +755,7 @@ export default function CRMHome() {
         scheduled_at: '',
         pic_name: ''
       });
+      fetchData();
     } catch (err) {
       alert("Error scheduling visit: " + err.message);
     }
@@ -795,6 +797,7 @@ export default function CRMHome() {
       setSelectedVisitForMinutes(null);
       setMinutesSummary('');
       setMinutesFile(null);
+      fetchData();
     } catch (err) {
       alert("Error logging minutes: " + err.message);
     }
