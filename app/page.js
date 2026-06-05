@@ -2,6 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useTheme } from 'next-themes';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Select } from '../components/ui/select';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/table';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -107,7 +114,11 @@ export default function CRMHome() {
 
   // Navigation & Theme States
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'inquiries', 'customers'
-  const [theme, setTheme] = useState('dark');
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -299,14 +310,9 @@ export default function CRMHome() {
     };
   }, [session]);
 
-  // Theme Sync effect
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
   // Toggle Theme helper
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   // Stale check logic: returns true if last activity was > 3 days ago
@@ -800,47 +806,32 @@ export default function CRMHome() {
   // ----------------------------------------------------
   if (!session) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        width: '100vw', 
-        height: '100vh', 
-        background: 'var(--bg-app)',
-        transition: 'background 0.3s'
-      }}>
-        <div className="glass-panel" style={{ 
-          width: '420px', 
-          padding: '40px', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '24px',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, var(--color-accent), var(--color-pending))', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '24px', fontWeight: 'bold', margin: '0 auto 16px auto' }}>C</div>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '-0.5px' }}>CRM Core Portal</h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '6px' }}>Admin-Managed Access Portal</p>
+      <div className="flex items-center justify-center w-screen h-screen bg-background transition-colors duration-300">
+        <div className="w-[420px] p-10 rounded-2xl border border-border bg-card shadow-2xl flex flex-col gap-6">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-pending rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
+              C
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">CRM Core Portal</h2>
+            <p className="text-xs text-muted mt-1.5 uppercase tracking-wider font-semibold">Admin-Managed Access Portal</p>
           </div>
 
-          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div className="form-group">
-              <label className="form-label">Workplace Email</label>
-              <input 
+          <form onSubmit={handleSignIn} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted">Workplace Email</label>
+              <Input 
                 type="email" 
-                className="form-input" 
                 required 
-                placeholder="e.g. administrator@company.com" 
+                placeholder="administrator@company.com" 
                 value={email}
                 onChange={e => setEmail(e.target.value)}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Password</label>
-              <input 
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted">Password</label>
+              <Input 
                 type="password" 
-                className="form-input" 
                 required 
                 placeholder="••••••••" 
                 value={password}
@@ -849,30 +840,31 @@ export default function CRMHome() {
             </div>
 
             {authError && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: 'var(--color-stale-glow)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', color: 'var(--color-stale)', fontSize: '13px' }}>
-                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-stale/10 border border-stale/20 text-stale text-xs">
+                <AlertCircle size={16} className="flex-shrink-0" />
                 <span>{authError}</span>
               </div>
             )}
 
-            <button 
+            <Button 
               type="submit" 
-              className="action-btn" 
-              style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '12px', fontSize: '15px' }}
+              className="w-full flex justify-center py-2 text-sm"
               disabled={authActionLoading}
             >
               {authActionLoading ? 'Authenticating...' : 'Sign In To Workspace'}
-            </button>
+            </Button>
           </form>
 
-          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px' }}>
-            <button 
-              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+          <div className="border-t border-border pt-4 text-center flex justify-center">
+            <Button 
+              variant="ghost" 
+              size="sm"
               onClick={toggleTheme}
+              className="flex items-center gap-2"
             >
               {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
               Toggle Theme
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -883,214 +875,188 @@ export default function CRMHome() {
   // RENDER WORKSPACE (If authenticated)
   // ----------------------------------------------------
   const renderSortIcon = (field) => {
-    if (sortField !== field) return <span style={{ marginLeft: '6px', opacity: 0.35, fontSize: '11px', display: 'inline-block', transition: 'all 0.2s ease' }}>⇅</span>;
-    return <span style={{ marginLeft: '6px', color: 'var(--color-accent)', fontSize: '11px', display: 'inline-block', transition: 'all 0.2s ease' }}>{sortDirection === 'asc' ? '▲' : '▼'}</span>;
+    if (sortField !== field) return <span className="ml-1.5 opacity-35 text-[11px] inline-block transition-all duration-200">⇅</span>;
+    return <span className="ml-1.5 text-primary text-[11px] inline-block transition-all duration-200">{sortDirection === 'asc' ? '▲' : '▼'}</span>;
   };
 
   return (
-    <div className="app-container">
+    <div className="flex h-screen w-screen bg-background text-foreground overflow-hidden font-sans">
       {/* 1. SIDEBAR NAVIGATION */}
       {mobileSidebarOpen && (
         <div 
-          className="sidebar-backdrop mobile-open" 
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden" 
           onClick={() => setMobileSidebarOpen(false)} 
         />
       )}
-      <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
+      <aside className={`flex h-full flex-col justify-between border-r border-border bg-sidebar py-6 transition-all duration-300 z-55 shrink-0 ${sidebarCollapsed ? 'w-20 px-3' : 'w-64 px-4'} ${mobileSidebarOpen ? 'fixed inset-y-0 left-0 translate-x-0 w-64' : 'hidden md:flex'}`}>
         <div>
-          <div className="logo-section" style={{ display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'space-between', alignItems: 'center', padding: sidebarCollapsed ? '0 0 20px 0' : '0 12px 24px 12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: sidebarCollapsed ? 'auto' : '100%' }}>
-              <div className="logo-icon" style={{ flexShrink: 0 }}>C</div>
-              {!sidebarCollapsed && <span className="logo-text">CRM Core</span>}
+          <div className={`flex items-center justify-between pb-6 border-b border-border ${sidebarCollapsed ? 'px-0 justify-center' : 'px-3'}`}>
+            <div className="flex items-center gap-3 w-full">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-pending text-white font-bold text-lg shrink-0">C</div>
+              {!sidebarCollapsed && <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-muted bg-clip-text text-transparent">CRM Core</span>}
             </div>
             {!sidebarCollapsed && (
-              <button 
+              <Button 
+                variant="ghost" 
+                size="icon"
                 onClick={() => setSidebarCollapsed(true)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px', transition: 'background 0.2s' }}
-                className="sidebar-toggle-btn"
+                className="text-muted hover:text-foreground shrink-0"
                 title="Collapse Sidebar"
               >
                 <Menu size={18} />
-              </button>
+              </Button>
             )}
           </div>
 
           {sidebarCollapsed && (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
-              <button 
+            <div className="flex justify-center py-4 border-b border-border mb-4">
+              <Button 
+                variant="ghost" 
+                size="icon"
                 onClick={() => setSidebarCollapsed(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px' }}
+                className="text-muted hover:text-foreground"
                 title="Expand Sidebar"
               >
                 <Menu size={18} />
-              </button>
+              </Button>
             </div>
           )}
 
-          <nav className="nav-links" style={{ gap: '12px' }}>
-            <div 
-              className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('dashboard'); setMobileSidebarOpen(false); }}
-              title={sidebarCollapsed ? "Dashboard" : ""}
-              style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
-            >
-              <LayoutDashboard size={20} style={{ flexShrink: 0 }} />
-              {!sidebarCollapsed && <span>Dashboard</span>}
-            </div>
-            <div 
-              className={`nav-link ${activeTab === 'inquiries' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('inquiries'); setMobileSidebarOpen(false); }}
-              title={sidebarCollapsed ? "Inquiries Pipeline" : ""}
-              style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
-            >
-              <FileText size={20} style={{ flexShrink: 0 }} />
-              {!sidebarCollapsed && <span>Inquiries Pipeline</span>}
-            </div>
-            <div 
-              className={`nav-link ${activeTab === 'customers' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('customers'); setMobileSidebarOpen(false); }}
-              title={sidebarCollapsed ? "Customer Contact" : ""}
-              style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-start', padding: sidebarCollapsed ? '12px 0' : '12px' }}
-            >
-              <Users size={20} style={{ flexShrink: 0 }} />
-              {!sidebarCollapsed && <span>Customer Contact</span>}
-            </div>
+          <nav className="flex flex-col gap-1.5 mt-6">
+            {[
+              { id: 'dashboard', name: 'Dashboard Analytics', icon: LayoutDashboard },
+              { id: 'inquiries', name: 'Inquiries Pipeline', icon: FileText },
+              { id: 'customers', name: 'Customer Contact', icon: Users },
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <div 
+                  key={tab.id}
+                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 text-sm font-medium ${sidebarCollapsed ? 'justify-center' : 'justify-start'} ${isActive ? 'text-foreground bg-primary/10 border-l-4 border-primary pl-2' : 'text-muted hover:text-foreground hover:bg-card-hover'}`}
+                  onClick={() => { setActiveTab(tab.id); setMobileSidebarOpen(false); }}
+                  title={sidebarCollapsed ? tab.name : ""}
+                >
+                  <Icon size={20} className="shrink-0" />
+                  {!sidebarCollapsed && <span>{tab.name}</span>}
+                </div>
+              );
+            })}
           </nav>
         </div>
 
-        <div className="sidebar-footer" style={{ gap: '12px' }}>
-          <button 
-            className="theme-toggle-btn" 
+        <div className="flex flex-col gap-3 pt-4 border-t border-border">
+          <Button 
+            variant="outline" 
             onClick={toggleTheme}
             title={sidebarCollapsed ? "Toggle Theme" : ""}
-            style={{ padding: sidebarCollapsed ? '10px 0' : '10px', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: sidebarCollapsed ? '0' : '10px' }}
+            className={`w-full justify-start gap-3 border-border hover:bg-card-hover text-foreground ${sidebarCollapsed ? 'px-0 justify-center' : ''}`}
           >
-            {theme === 'dark' ? <Sun size={18} style={{ flexShrink: 0 }} /> : <Moon size={18} style={{ flexShrink: 0 }} />}
+            {theme === 'dark' ? <Sun size={18} className="shrink-0" /> : <Moon size={18} className="shrink-0" />}
             {!sidebarCollapsed && <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
-          </button>
-          <button 
-            className="theme-toggle-btn" 
+          </Button>
+          <Button 
+            variant="outline" 
             onClick={handleSignOut} 
             title={sidebarCollapsed ? "Sign Out" : ""}
-            style={{ 
-              color: 'var(--color-stale)', 
-              borderColor: 'rgba(239, 68, 68, 0.2)',
-              padding: sidebarCollapsed ? '10px 0' : '10px',
-              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-              gap: sidebarCollapsed ? '0' : '10px'
-            }}
+            className={`w-full justify-start gap-3 border-red-500/20 text-red-500 hover:bg-red-500/10 ${sidebarCollapsed ? 'px-0 justify-center' : ''}`}
           >
-            <LogOut size={18} style={{ flexShrink: 0 }} />
+            <LogOut size={18} className="shrink-0" />
             {!sidebarCollapsed && <span>Sign Out</span>}
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: sidebarCollapsed ? '0' : '0 8px', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', textAlign: 'center', lineHeight: '36px', flexShrink: 0 }}>
+          </Button>
+          <div className={`flex items-center gap-3 mt-2 ${sidebarCollapsed ? 'justify-center' : 'px-2'}`}>
+            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-white shrink-0">
               {session.user.email[0].toUpperCase()}
             </div>
             {!sidebarCollapsed && (
-              <div>
-                <p style={{ fontSize: '13px', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '130px' }}>{session.user.email}</p>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Authorized</p>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate w-32">{session.user.email}</p>
+                <p className="text-[11px] text-muted">Authorized</p>
               </div>
             )}
           </div>
         </div>
       </aside>
 
-      <main className="main-content">
-        <header className="top-bar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button 
-              className="mobile-hamburger-btn" 
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0 h-screen">
+        <header className="flex h-18 items-center justify-between border-b border-border bg-sidebar/55 backdrop-blur-md px-8 sticky top-0 z-40 shrink-0">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="md:hidden text-foreground"
               onClick={() => setMobileSidebarOpen(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-main)',
-                cursor: 'pointer',
-                display: 'none',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '6px',
-                borderRadius: '6px'
-              }}
             >
               <Menu size={20} />
-            </button>
-            <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            </Button>
+            <h1 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
               {activeTab === 'dashboard' && '📊 Dashboard Analytics'}
               {activeTab === 'inquiries' && '📁 Inquiries Pipeline'}
               {activeTab === 'customers' && '👥 Customer Directory'}
             </h1>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="flex gap-3">
             {activeTab === 'customers' && (
-              <button className="action-btn" onClick={() => setIsAddCustomerOpen(true)}>
+              <Button onClick={() => setIsAddCustomerOpen(true)} className="flex items-center gap-2">
                 <Plus size={16} /> Add Customer
-              </button>
+              </Button>
             )}
-            <button className="action-btn" onClick={() => setIsAddInquiryOpen(true)}>
+            <Button onClick={() => setIsAddInquiryOpen(true)} className="flex items-center gap-2">
               <Plus size={16} /> New Inquiry
-            </button>
+            </Button>
           </div>
         </header>
 
-        <div className="content-body">
-          {/* A. KPI BANNER RIBBON (Visible on all tabs for high overview) */}
-          <section className="kpi-row">
-            <div className="glass-panel kpi-card">
-              <span className="kpi-title">Total Inquiries</span>
-              <div className="kpi-value">
+        <div className="flex-1 p-8 overflow-y-auto overflow-x-hidden flex flex-col gap-8 box-border w-full">
+          {/* A. KPI BANNER RIBBON */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 sticky top-[-32px] z-30 bg-background/90 backdrop-blur-md py-4 -my-4 border-b border-border/10">
+            <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-primary bg-card/60 backdrop-blur-md">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Total Inquiries</span>
+              <div className="text-2xl font-bold flex items-baseline gap-1.5 text-foreground">
                 {totalInquiries}
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>requests</span>
+                <span className="text-[11px] text-muted font-normal uppercase">requests</span>
               </div>
-              <div className="kpi-indicator" style={{ background: 'var(--color-accent)' }}></div>
-            </div>
+            </Card>
 
-            <div 
-              className={`glass-panel kpi-card kpi-clickable-card ${showOnlyPendingQuotes ? 'active-filter' : ''}`}
+            <Card 
+              className={`p-5 flex flex-col gap-2 relative border-l-4 border-l-pending bg-card/60 backdrop-blur-md cursor-pointer hover:bg-card-hover/40 transition-all duration-200 ${showOnlyPendingQuotes ? 'ring-1 ring-pending' : ''}`}
               onClick={() => {
                 setShowOnlyPendingQuotes(prev => !prev);
                 if (activeTab !== 'inquiries') {
                   setActiveTab('inquiries');
                 }
               }}
-              style={{ cursor: 'pointer' }}
             >
-              <span className="kpi-title">Inquiries Without Quote</span>
-              <div className="kpi-value" style={{ color: 'var(--color-pending)' }}>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Inquiries Without Quote</span>
+              <div className="text-2xl font-bold flex items-baseline gap-1.5 text-pending">
                 {pendingQuotations}
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>pending</span>
+                <span className="text-[11px] text-muted font-normal uppercase">pending</span>
               </div>
-              <div className="kpi-indicator" style={{ background: 'var(--color-pending)' }}></div>
-            </div>
+            </Card>
 
-            <div className="glass-panel kpi-card">
-              <span className="kpi-title">Active Follow-up</span>
-              <div className="kpi-value" style={{ color: 'var(--color-follow)' }}>
+            <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-follow bg-card/60 backdrop-blur-md">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Active Follow-up</span>
+              <div className="text-2xl font-bold flex items-baseline gap-1.5 text-follow">
                 {followUpCount}
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>leads</span>
+                <span className="text-[11px] text-muted font-normal uppercase">leads</span>
               </div>
-              <div className="kpi-indicator" style={{ background: 'var(--color-follow)' }}></div>
-            </div>
+            </Card>
 
-            <div className="glass-panel kpi-card">
-              <span className="kpi-title">Stale Follow-up (3d+)</span>
-              <div className="kpi-value" style={{ color: 'var(--color-stale)' }}>
+            <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-stale bg-card/60 backdrop-blur-md">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Stale Follow-up (3d+)</span>
+              <div className="text-2xl font-bold flex items-center text-stale">
                 {staleCount}
-                {staleCount > 0 && <span className="stale-pulse" style={{ width: '10px', height: '10px', marginLeft: '8px' }}></span>}
+                {staleCount > 0 && <span className="stale-pulse w-2.5 h-2.5 rounded-full bg-stale inline-block ml-3 animate-pulse"></span>}
               </div>
-              <div className="kpi-indicator" style={{ background: 'var(--color-stale)' }}></div>
-            </div>
+            </Card>
 
-            <div className="glass-panel kpi-card">
-              <span className="kpi-title">Won Conversion</span>
-              <div className="kpi-value" style={{ color: 'var(--color-won)' }}>
+            <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-won bg-card/60 backdrop-blur-md">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">Won Conversion</span>
+              <div className="text-2xl font-bold flex items-baseline gap-1.5 text-won">
                 {conversionRate}%
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>({wonOrdersCount} POs)</span>
+                <span className="text-[11px] text-muted font-normal normal-case">({wonOrdersCount} POs)</span>
               </div>
-              <div className="kpi-indicator" style={{ background: 'var(--color-won)' }}></div>
-            </div>
+            </Card>
           </section>
 
           {loading ? (
