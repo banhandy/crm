@@ -978,13 +978,38 @@ export default function CRMHome() {
         </div>
       </aside>
 
+      {/* 2. MOBILE BOTTOM NAVIGATION BAR */}
+      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-sidebar border-t border-border z-40 flex items-center justify-around md:hidden">
+        {[
+          { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+          { id: 'inquiries', name: 'Pipeline', icon: FileText },
+          { id: 'customers', name: 'Contact', icon: Users },
+        ].map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-col items-center justify-center gap-1 w-full h-full text-[10px] font-medium transition-all ${
+                isActive ? 'text-primary font-semibold' : 'text-muted hover:text-foreground'
+              }`}
+            >
+              <Icon size={20} className={isActive ? 'text-primary' : 'text-muted'} />
+              <span>{tab.name}</span>
+            </button>
+          );
+        })}
+      </nav>
+
       <main className="flex-1 flex flex-col overflow-hidden min-w-0 h-screen">
         <header className="flex h-18 items-center justify-between border-b border-border bg-sidebar/55 backdrop-blur-md px-8 sticky top-0 z-40 shrink-0">
           <div className="flex items-center gap-3">
             <Button 
               variant="ghost" 
               size="icon"
-              className="md:hidden text-foreground"
+              className="hidden text-foreground"
               onClick={() => setMobileSidebarOpen(true)}
             >
               <Menu size={20} />
@@ -1007,7 +1032,7 @@ export default function CRMHome() {
           </div>
         </header>
 
-        <div className="flex-1 p-8 overflow-y-auto overflow-x-hidden flex flex-col gap-8 box-border w-full">
+        <div className="flex-1 p-8 pb-24 md:pb-8 overflow-y-auto overflow-x-hidden flex flex-col gap-8 box-border w-full">
           {/* A. KPI BANNER RIBBON */}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 sticky top-[-32px] z-30 bg-background/90 backdrop-blur-md py-4 -my-4 border-b border-border/10">
             <Card className="p-5 flex flex-col gap-2 relative border-l-4 border-l-primary bg-card/60 backdrop-blur-md">
