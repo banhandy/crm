@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+@source "../app/**/*.{js,ts,jsx,tsx}";
+@source "../components/**/*.{js,ts,jsx,tsx}";
 
 @theme {
   --color-background: var(--bg-app);
@@ -76,22 +78,22 @@
   --color-stale-glow: rgba(239, 68, 68, 0.1);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-family);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-color) transparent;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+    font-family: var(--font-family);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
 
-body {
-  background-color: var(--bg-app);
-  color: var(--text-main);
-  overflow: hidden;
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  height: 100vh;
-  width: 100vw;
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    overflow: hidden;
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100vh;
+    width: 100vw;
+  }
 }
 
 /* Glassmorphic Panel Styles */
@@ -582,6 +584,7 @@ body {
   font-size: 12px;
   font-weight: 600;
   gap: 6px;
+  white-space: nowrap;
 }
 
 .badge-won { background: var(--color-won-glow); color: var(--color-won); border: 1px solid rgba(16, 185, 129, 0.3); }
